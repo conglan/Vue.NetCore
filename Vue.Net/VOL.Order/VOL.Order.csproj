@@ -15,9 +15,10 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="IRepositories\Appointment\" />
-    <Folder Include="IServices\Appointment\Partial\" />
-    <Folder Include="Services\Appointment\Partial\" />
+    <Folder Include="IRepositories\" />
+    <Folder Include="IServices\" />
+    <Folder Include="Repositories\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

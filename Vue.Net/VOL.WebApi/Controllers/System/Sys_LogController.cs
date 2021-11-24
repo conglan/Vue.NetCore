@@ -34,22 +34,6 @@ namespace VOL.System.Controllers
                     }); ;
                 }
                 DBServerProvider.SqlDapper.AddRange<Sys_Log>(list);
-
-                List<App_Appointment> list1 = new List<App_Appointment>();
-                for (int i = 0; i < 10; i++)
-                {
-                    list1.Add(new App_Appointment()
-                    {
-                        Id = Guid.NewGuid(),
-                        Describe="111",
-                        Name="222",
-                        PhoneNo="333",
-                        Creator = i.ToString()
-                    }); ;
-                }
-                DBServerProvider.SqlDapper.AddRange<App_Appointment>(list1);
-
-                //  DBServerProvider.SqlDapper.BulkInsert<Sys_Log>(list);
             }
             catch (Exception ex)
             {

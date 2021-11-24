@@ -27,9 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DomainModels\ApiEntity\OutPut\" />
-    <Folder Include="DomainModels\Appointment\" />
     <Folder Include="DomainModels\News\" />
-    <Folder Include="MappingConfiguration\Appointment\" />
     <Folder Include="System\" />
   </ItemGroup>
 

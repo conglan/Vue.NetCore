@@ -15,10 +15,5 @@ let tables = [
         name: 'table3',
         component: () => import('@/views/tables/table3.vue')
     },
-    // {
-    //     path: '/tableForms',
-    //     name: 'tableForms',
-    //     component: () => import('@/views/tables/tableForms.vue')
-    // }
 ]
 export default tables;

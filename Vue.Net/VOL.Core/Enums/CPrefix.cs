@@ -16,7 +16,5 @@ namespace VOL.Core.Enums
         /// </summary>
         HDImg = 2,
         Token = 3,
-        CityList
-
     }
 }

@@ -279,28 +279,6 @@ export default {
             field: "Address",
             type: "label",
           },
-          {
-            title: "图片",
-            required: true,
-            field: "img",
-            type: "img",
-            multiple: true,
-            maxFile: 2,
-            maxSize: 5,
-            url: "api/App_Appointment/Upload",
-            //  colSize: 6, //设置宽度50%
-          },
-          {
-            title: "上传",
-            required: true,
-            field: "uploadFile",
-            type: "excel", //指定上传类型excel/img/file
-            multiple: true,
-            maxFile: 5,
-            maxSize: 3,
-            url: "api/App_Appointment/Upload",
-            // colSize: 6, //设置宽度50%
-          },
         ],
       ],
     };
