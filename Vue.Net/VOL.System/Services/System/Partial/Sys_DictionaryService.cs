@@ -17,6 +17,7 @@ namespace VOL.System.Services
         protected override void Init(IRepository<Sys_Dictionary> repository)
         {
         }
+
         /// <summary>
         /// 代码生成器获取所有字典项编号(超级管理权限)
         /// </summary>
@@ -60,7 +61,6 @@ namespace VOL.System.Services
                 data = GetSourceData(item.dicNo, item.dbSql, item.list)
             }).ToList();
         }
-
 
         /// <summary>
         /// 通过远程搜索
@@ -107,7 +107,6 @@ namespace VOL.System.Services
             //return await Task.FromResult(repository.DapperContext.QueryFirst<object>(sql, new { key }));
         }
 
-
         /// <summary>
         ///  table加载数据后刷新当前table数据的字典项(适用字典数据量比较大的情况)
         /// </summary>
@@ -115,11 +114,6 @@ namespace VOL.System.Services
         /// <returns></returns>
         public object GetTableDictionary(Dictionary<string, object[]> keyData)
         {
-            // 2020.08.06增加pgsql获取数据源
-            if (DBType.Name == DbCurrentType.PgSql.ToString())
-            {
-                return GetPgSqlTableDictionary(keyData);
-            }
             var dicInfo = Dictionaries.Where(x => keyData.ContainsKey(x.DicNo) && !string.IsNullOrEmpty(x.DbSql))
                 .Select(x => new { x.DicNo, x.DbSql })
                 .ToList();
@@ -140,31 +134,6 @@ namespace VOL.System.Services
             return list;
         }
 
-        /// <summary>
-        ///  2020.08.06增加pgsql获取数据源
-        /// </summary>
-        /// <param name="keyData"></param>
-        /// <returns></returns>
-        public object GetPgSqlTableDictionary(Dictionary<string, object[]> keyData)
-        {
-            var dicInfo = Dictionaries.Where(x => keyData.ContainsKey(x.DicNo) && !string.IsNullOrEmpty(x.DbSql))
-                .Select(x => new { x.DicNo, x.DbSql })
-                .ToList();
-            List<object> list = new List<object>();
-
-            dicInfo.ForEach(x =>
-            {
-                if (keyData.TryGetValue(x.DicNo, out object[] data))
-                {
-                    string sql = DictionaryHandler.GetCustomDBSql(x.DicNo, x.DbSql);
-                    sql = $"SELECT * FROM ({sql}) AS t WHERE t.key=any(@data)";
-                    list.Add(new { key = x.DicNo, data = repository.DapperContext.QueryList<object>(sql, new { data = data.Select(s => s.ToString()).ToList() }) });
-                }
-            });
-            return list;
-        }
-
-
         public override PageGridData<Sys_Dictionary> GetPageData(PageDataOptions pageData)
         {
             //增加查询条件
@@ -174,6 +143,7 @@ namespace VOL.System.Services
             };
             return base.GetPageData(pageData);
         }
+
         public override WebResponseContent Update(SaveModel saveDataModel)
         {
             if (saveDataModel.MainData.DicKeyIsNullOrEmpty("DicNo")
@@ -197,9 +167,7 @@ namespace VOL.System.Services
                 return new WebResponseContent(true);
             };
             return RemoveCache(base.Update(saveDataModel));
-
         }
-
 
         private WebResponseContent CheckKeyValue(List<Sys_DictionaryList> dictionaryLists)
         {
@@ -232,7 +200,7 @@ namespace VOL.System.Services
             source = Regex.Replace(source, "xp_cmdshell", "", RegexOptions.IgnoreCase);
             source = Regex.Replace(source, "/add", "", RegexOptions.IgnoreCase);
             source = Regex.Replace(source, "net user", "", RegexOptions.IgnoreCase);
-            //去除执行存储过程的命令关键字 
+            //去除执行存储过程的命令关键字
             source = Regex.Replace(source, "exec", "", RegexOptions.IgnoreCase);
             source = Regex.Replace(source, "execute", "", RegexOptions.IgnoreCase);
             //去除系统存储过程或扩展存储过程关键字
@@ -243,6 +211,7 @@ namespace VOL.System.Services
 
             return source;
         }
+
         public override WebResponseContent Add(SaveModel saveDataModel)
         {
             if (saveDataModel.MainData.DicKeyIsNullOrEmpty("DicNo")) return base.Add(saveDataModel);
@@ -283,4 +252,3 @@ namespace VOL.System.Services
         }
     }
 }
-

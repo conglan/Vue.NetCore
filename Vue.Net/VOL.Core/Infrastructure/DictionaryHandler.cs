@@ -45,10 +45,6 @@ namespace VOL.Core.Infrastructure
         /// <returns></returns>
         public static string GetRolesSql()
         {
-            if (DBType.Name == DbCurrentType.PgSql.ToString())
-            {
-                return "SELECT \"Role_Id\" as key,\"RoleName\" as value from Sys_Role";
-            }
             return $@"SELECT Role_Id as 'key',RoleName as 'value' FROM Sys_Role 
                            WHERE Enable=1 ";
         }

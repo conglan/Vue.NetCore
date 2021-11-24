@@ -76,19 +76,12 @@ namespace VOL.Core.EFDbContext
             {
                 optionsBuilder.UseMySql(connectionString);
             }
-            else if (Const.DBType.Name == Enums.DbCurrentType.PgSql.ToString())
-            {
-                optionsBuilder.UseNpgsql(connectionString);
-            }
             else
             {
                 optionsBuilder.UseSqlServer(connectionString);
             }
             //默认禁用实体跟踪
             optionsBuilder = optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-            //var loggerFactory = new LoggerFactory();
-            //loggerFactory.AddProvider(new EFLoggerProvider());
-            //  optionsBuilder.UseLoggerFactory(loggerFactory);
             base.OnConfiguring(optionsBuilder);
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)

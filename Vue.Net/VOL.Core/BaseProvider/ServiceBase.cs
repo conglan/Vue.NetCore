@@ -1051,26 +1051,13 @@ namespace VOL.Core.BaseProvider
             }
 
             string sql = $"DELETE FROM {entityType.GetEntityTableName() } where {tKey} in ({joinKeys});";
-            // 2020.08.06增加pgsql删除功能
-            if (DBType.Name == DbCurrentType.PgSql.ToString())
-            {
-                sql = $"DELETE FROM \"public\".\"{entityType.GetEntityTableName() }\" where \"{tKey}\" in ({joinKeys});";
-            }
             if (delList)
             {
                 Type detailType = entityType.GetCustomAttribute<EntityAttribute>()?.DetailTable?[0];
                 if (detailType != null)
                 {
-                    if (DBType.Name == DbCurrentType.PgSql.ToString())
-                    {
-                        sql += $"DELETE FROM \"public\".\"{detailType.GetEntityTableName()}\" where \"{tKey}\" in ({joinKeys});";
-                    }
-                    else
-                    {
-                        sql += $"DELETE FROM {detailType.GetEntityTableName()} where {tKey} in ({joinKeys});";
-                    }
+                    sql += $"DELETE FROM {detailType.GetEntityTableName()} where {tKey} in ({joinKeys});";
                 }
-
             }
 
             //repository.DapperContext.ExcuteNonQuery(sql, CommandType.Text, null, true);

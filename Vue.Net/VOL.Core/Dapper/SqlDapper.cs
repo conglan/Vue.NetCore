@@ -586,12 +586,6 @@ namespace VOL.Core.Dapper
                 sql = $"insert into {entityType.GetEntityTableName()}({string.Join(",", columns)})" +
                  $"values(@{string.Join(",@", columns)});";
             }
-            else if (DBType.Name == DbCurrentType.PgSql.ToString())
-            {
-                //todo pgsql批量写入 待检查是否正确
-                sql = $"insert into {entityType.GetEntityTableName()}({"\"" + string.Join("\",\"", columns) + "\""})" +
-                    $"values(@{string.Join(",@", columns)});";
-            }
             else
             {
                 //sqlserver通过临时表批量写入
@@ -602,8 +596,7 @@ namespace VOL.Core.Dapper
             }
             return Execute<int>((conn, dbTransaction) =>
             {
-                //todo pgsql待实现
-                return conn.Execute(sql, (DBType.Name == DbCurrentType.MySql.ToString() || DBType.Name == DbCurrentType.PgSql.ToString()) ? entities.ToList() : null, dbTransaction);
+                return conn.Execute(sql, (DBType.Name == DbCurrentType.MySql.ToString()) ? entities.ToList() : null, dbTransaction);
             }, beginTransaction);
         }
 
@@ -679,17 +672,7 @@ namespace VOL.Core.Dapper
             string joinKeys = (fieldType == FieldType.Int || fieldType == FieldType.BigInt)
                  ? string.Join(",", keys)
                  : $"'{string.Join("','", keys)}'";
-            string sql;
-            // 2020.08.06增加pgsql删除功能
-            if (DBType.Name == DbCurrentType.PgSql.ToString())
-            {
-                sql = $"DELETE FROM \"public\".\"{entityType.GetEntityTableName()}\" where \"{tKey}\" in ({joinKeys});";
-            }
-            else
-            {
-                sql = $"DELETE FROM {entityType.GetEntityTableName() } where {tKey} in ({joinKeys});";
-            }
-
+            string sql=$"DELETE FROM {entityType.GetEntityTableName() } where {tKey} in ({joinKeys});";
             return ExcuteNonQuery(sql, null);
         }
         /// <summary>
@@ -747,11 +730,6 @@ namespace VOL.Core.Dapper
             if (DBType.Name == "MySql")
             {
                 return MySqlBulkInsert(table, tableName, fileName, tmpPath);
-            }
-
-            if (DBType.Name == "PgSql")
-            {
-                PGSqlBulkInsert(table, tableName);
             }
             return MSSqlBulkInsert(table, tableName, sqlBulkCopyOptions ?? SqlBulkCopyOptions.KeepIdentity);
         }
@@ -845,36 +823,5 @@ namespace VOL.Core.Dapper
 
             return sb.ToString();
         }
-        /// <summary>
-        /// 2020.08.07增加PGSQL批量写入
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="tableName"></param>
-        private void PGSqlBulkInsert(DataTable table, string tableName)
-        {
-            List<string> columns = new List<string>();
-            for (int i = 0; i < table.Columns.Count; i++)
-            {
-                columns.Add("\"" + table.Columns[i].ColumnName + "\"");
-            }
-            string copySql = $"copy \"public\".\"{tableName}\"({string.Join(',', columns)}) FROM STDIN (FORMAT BINARY)";
-            using (var conn = new Npgsql.NpgsqlConnection(_connectionString))
-            {
-                conn.Open();
-                using (var writer = conn.BeginBinaryImport(copySql))
-                {
-                    foreach (DataRow row in table.Rows)
-                    {
-                        writer.StartRow();
-                        for (int i = 0; i < table.Columns.Count; i++)
-                        {
-                            writer.Write(row[i]);
-                        }
-                    }
-                    writer.Complete();
-                }
-            }
-        }
-
     }
 }
