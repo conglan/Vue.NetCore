@@ -565,8 +565,6 @@ namespace VOL.Core.BaseProvider
         /// <param name="entities"></param>
         public virtual void BulkInsert(IEnumerable<TEntity> entities, bool setOutputIdentity = false)
         {
-            //  EFContext.Model.FindEntityType("").Relational()
-            //Pomelo.EntityFrameworkCore.MySql
             try
             {
                 //     EFContext.BulkInsert(entities.ToList());

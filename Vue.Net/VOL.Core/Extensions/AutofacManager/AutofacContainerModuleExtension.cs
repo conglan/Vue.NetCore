@@ -27,7 +27,6 @@ namespace VOL.Core.Extensions
 {
     public static class AutofacContainerModuleExtension
     {
-        //  private static bool _isMysql = false;
         public static IServiceCollection AddModule(this IServiceCollection services, ContainerBuilder builder, IConfiguration configuration)
         {
             //services.AddSession();
@@ -63,21 +62,7 @@ namespace VOL.Core.Extensions
             //model校验结果
             builder.RegisterType<ObjectModelValidatorState>().InstancePerLifetimeScope();
             string connectionString = DBServerProvider.GetConnectionString(null);
-
-            if (DBType.Name == DbCurrentType.MySql.ToString())
-            {
-                //2020.03.31增加dapper对mysql字段Guid映射
-                SqlMapper.AddTypeHandler(new DapperParseGuidTypeHandler());
-                SqlMapper.RemoveTypeMap(typeof(Guid?));
-
-                //services.AddDbContext<VOLContext>();
-                //mysql8.x的版本使用Pomelo.EntityFrameworkCore.MySql 3.1会产生异常，需要在字符串连接上添加allowPublicKeyRetrieval=true
-                services.AddDbContextPool<VOLContext>(optionsBuilder => { optionsBuilder.UseMySql(connectionString); }, 64);
-            }
-            else
-            {
-                services.AddDbContextPool<VOLContext>(optionsBuilder => { optionsBuilder.UseSqlServer(connectionString); }, 64);
-            }
+            services.AddDbContextPool<VOLContext>(optionsBuilder => { optionsBuilder.UseSqlServer(connectionString); }, 64);
             //启用缓存
             if (AppSetting.UseRedis)
             {

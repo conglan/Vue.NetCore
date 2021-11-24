@@ -1,11 +1,8 @@
-﻿
-using Dapper;
-using MySql.Data.MySqlClient;
+﻿using Dapper;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -14,8 +11,6 @@ using VOL.Core.Const;
 using VOL.Core.DBManager;
 using VOL.Core.Enums;
 using VOL.Core.Extensions;
-using VOL.Core.Utilities;
-
 
 namespace VOL.Core.Dapper
 {
@@ -24,15 +19,18 @@ namespace VOL.Core.Dapper
         private string _connectionString;
         private int? commandTimeout = null;
         private DbCurrentType _dbCurrentType;
+
         public SqlDapper()
         {
             _connectionString = DBServerProvider.GetConnectionString();
         }
+
         public SqlDapper(string connKeyName, DbCurrentType dbCurrentType)
         {
             _dbCurrentType = dbCurrentType;
             _connectionString = DBServerProvider.GetConnectionString(connKeyName);
         }
+
         public SqlDapper(string connKeyName)
         {
             _connectionString = DBServerProvider.GetConnectionString(connKeyName);
@@ -52,7 +50,6 @@ namespace VOL.Core.Dapper
             this.commandTimeout = timeout;
             return this;
         }
-
 
         private T Execute<T>(Func<IDbConnection, IDbTransaction, T> func, bool beginTransaction = false)
         {
@@ -193,6 +190,7 @@ namespace VOL.Core.Dapper
                 return conn.Query<T>(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text, commandTimeout: commandTimeout).ToList();
             }, beginTransaction);
         }
+
         public async Task<IEnumerable<T>> QueryListAsync<T>(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
         {
             return await ExecuteAsync(async (conn, dbTransaction) =>
@@ -208,7 +206,6 @@ namespace VOL.Core.Dapper
                 return await conn.QueryFirstOrDefaultAsync<T>(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text, commandTimeout: commandTimeout);
             }, beginTransaction);
         }
-
 
         public T QueryFirst<T>(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false) where T : class
         {
@@ -250,7 +247,6 @@ namespace VOL.Core.Dapper
             }, beginTransaction);
         }
 
-
         public async Task<object> ExecuteScalarAsync(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
         {
             return await ExecuteAsync(async (conn, dbTransaction) =>
@@ -282,6 +278,7 @@ namespace VOL.Core.Dapper
                 return conn.Execute(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text, commandTimeout: commandTimeout);
             }, beginTransaction);
         }
+
         public IDataReader ExecuteReader(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
         {
             return Execute<IDataReader>((conn, dbTransaction) =>
@@ -290,7 +287,6 @@ namespace VOL.Core.Dapper
             }, beginTransaction);
         }
 
-
         public SqlMapper.GridReader QueryMultiple(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
         {
             return Execute((conn, dbTransaction) =>
@@ -298,7 +294,6 @@ namespace VOL.Core.Dapper
                 return conn.QueryMultiple(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text, commandTimeout: commandTimeout);
             }, beginTransaction);
         }
-
 
         public async Task<(IEnumerable<T1>, IEnumerable<T2>)> QueryMultipleAsync<T1, T2>(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
         {
@@ -353,7 +348,6 @@ namespace VOL.Core.Dapper
             }, beginTransaction);
         }
 
-
         public async Task<(IEnumerable<T1>, IEnumerable<T2>, IEnumerable<T3>)> QueryMultipleAsync<T1, T2, T3>(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
         {
             return await ExecuteAsync(async (conn, dbTransaction) =>
@@ -364,7 +358,6 @@ namespace VOL.Core.Dapper
                 }
             }, beginTransaction);
         }
-
 
         public (List<T1>, List<T2>, List<T3>) QueryMultiple<T1, T2, T3>(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
         {
@@ -420,7 +413,6 @@ namespace VOL.Core.Dapper
             }, beginTransaction);
         }
 
-
         public (List<dynamic>, List<dynamic>, List<dynamic>) QueryDynamicMultiple3(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
         {
             return Execute((conn, dbTransaction) =>
@@ -434,7 +426,6 @@ namespace VOL.Core.Dapper
                 }
             }, beginTransaction);
         }
-
 
         public async Task<(IEnumerable<dynamic>, IEnumerable<dynamic>, IEnumerable<dynamic>, IEnumerable<dynamic>, IEnumerable<dynamic>)> QueryDynamicMultipleAsync5(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
         {
@@ -499,7 +490,6 @@ namespace VOL.Core.Dapper
             }, beginTransaction);
         }
 
-
         public async Task<(IEnumerable<T1>, IEnumerable<T2>, IEnumerable<T3>, IEnumerable<T4>, IEnumerable<T5>)> QueryMultipleAsync<T1, T2, T3, T4, T5>(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
         {
             return await ExecuteAsync(async (conn, dbTransaction) =>
@@ -531,12 +521,11 @@ namespace VOL.Core.Dapper
                 }
             }, beginTransaction);
         }
-        IDbTransaction dbTransaction = null;
 
-
+        private IDbTransaction dbTransaction = null;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="entity"></param>
@@ -547,8 +536,9 @@ namespace VOL.Core.Dapper
         {
             return AddRange<T>(new T[] { entity }, addFileds, beginTransaction);
         }
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="entities"></param>
@@ -580,29 +570,19 @@ namespace VOL.Core.Dapper
                 columns = properties.Select(x => x.Name).ToArray();
             }
             string sql = null;
-            if (DBType.Name == DbCurrentType.MySql.ToString())
-            {
-                //mysql批量写入待优化
-                sql = $"insert into {entityType.GetEntityTableName()}({string.Join(",", columns)})" +
-                 $"values(@{string.Join(",@", columns)});";
-            }
-            else
-            {
-                //sqlserver通过临时表批量写入
-                sql = $"insert into {entityType.GetEntityTableName()}({string.Join(",", columns)})" +
-                 $"select {string.Join(",", columns)}  from  {EntityToSqlTempName.TempInsert};";
-                //2020.11.21修复sqlserver批量写入主键类型判断错误
-                sql = entities.GetEntitySql(key.PropertyType == typeof(Guid), sql, null, addFileds, null);
-            }
+            //sqlserver通过临时表批量写入
+            sql = $"insert into {entityType.GetEntityTableName()}({string.Join(",", columns)})" +
+             $"select {string.Join(",", columns)}  from  {EntityToSqlTempName.TempInsert};";
+            //2020.11.21修复sqlserver批量写入主键类型判断错误
+            sql = entities.GetEntitySql(key.PropertyType == typeof(Guid), sql, null, addFileds, null);
             return Execute<int>((conn, dbTransaction) =>
             {
-                return conn.Execute(sql, (DBType.Name == DbCurrentType.MySql.ToString()) ? entities.ToList() : null, dbTransaction);
+                return conn.Execute(sql, null, dbTransaction);
             }, beginTransaction);
         }
 
-
         /// <summary>
-        /// sqlserver使用的临时表参数化批量更新，mysql批量更新待发开
+        /// sqlserver使用的临时表参数化批量更新
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="entity">实体必须带主键</param>
@@ -615,7 +595,7 @@ namespace VOL.Core.Dapper
         }
 
         /// <summary>
-        ///(根据主键批量更新实体) sqlserver使用的临时表参数化批量更新，mysql待优化
+        ///(根据主键批量更新实体) sqlserver使用的临时表参数化批量更新
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="entities">实体必须带主键</param>
@@ -638,18 +618,6 @@ namespace VOL.Core.Dapper
                 properties = properties.Where(x => updateFileds.GetExpressionToArray().Contains(x.Name));
             }
 
-            if (DBType.Name == DbCurrentType.MySql.ToString())
-            {
-                List<string> paramsList = new List<string>();
-                foreach (var item in properties)
-                {
-                    paramsList.Add(item.Name + "=@" + item.Name);
-                }
-                string sqltext = $@"UPDATE { entityType.GetEntityTableName()} SET {string.Join(",", paramsList)} WHERE {entityType.GetKeyName()} = @{entityType.GetKeyName()} ;";
-
-                return ExcuteNonQuery(sqltext, entities, CommandType.Text, true);
-                // throw new Exception("mysql批量更新未实现");
-            }
             string fileds = string.Join(",", properties.Select(x => $" a.{x.Name}=b.{x.Name}").ToArray());
             string sql = $"update  a  set {fileds} from  {entityType.GetEntityTableName()} as a inner join {EntityToSqlTempName.TempInsert.ToString()} as b on a.{key.Name}=b.{key.Name}";
             sql = entities.ToList().GetEntitySql(true, sql, null, updateFileds, null);
@@ -672,9 +640,10 @@ namespace VOL.Core.Dapper
             string joinKeys = (fieldType == FieldType.Int || fieldType == FieldType.BigInt)
                  ? string.Join(",", keys)
                  : $"'{string.Join("','", keys)}'";
-            string sql=$"DELETE FROM {entityType.GetEntityTableName() } where {tKey} in ({joinKeys});";
+            string sql = $"DELETE FROM {entityType.GetEntityTableName() } where {tKey} in ({joinKeys});";
             return ExcuteNonQuery(sql, null);
         }
+
         /// <summary>
         /// 使用key批量删除
         /// </summary>
@@ -685,6 +654,7 @@ namespace VOL.Core.Dapper
         {
             return DelWithKey<T>(false, keys);
         }
+
         /// <summary>
         /// 通过Bulk批量插入
         /// </summary>
@@ -714,6 +684,7 @@ namespace VOL.Core.Dapper
                 }
             }
         }
+
         public int BulkInsert<T>(List<T> entities, string tableName = null,
             Expression<Func<T, object>> columns = null,
             SqlBulkCopyOptions? sqlBulkCopyOptions = null)
@@ -721,70 +692,16 @@ namespace VOL.Core.Dapper
             DataTable table = entities.ToDataTable(columns, false);
             return BulkInsert(table, tableName ?? typeof(T).GetEntityTableName(), sqlBulkCopyOptions);
         }
+
         public int BulkInsert(DataTable table, string tableName, SqlBulkCopyOptions? sqlBulkCopyOptions = null, string fileName = null, string tmpPath = null)
         {
             if (!string.IsNullOrEmpty(tmpPath))
             {
                 tmpPath = tmpPath.ReplacePath();
             }
-            if (DBType.Name == "MySql")
-            {
-                return MySqlBulkInsert(table, tableName, fileName, tmpPath);
-            }
             return MSSqlBulkInsert(table, tableName, sqlBulkCopyOptions ?? SqlBulkCopyOptions.KeepIdentity);
         }
 
-        /// <summary>
-        ///大批量数据插入,返回成功插入行数
-        ////
-        /// </summary>
-        /// <param name="connectionString">数据库连接字符串</param>
-        /// <param name="table">数据表</param>
-        /// <returns>返回成功插入行数</returns>
-        private int MySqlBulkInsert(DataTable table, string tableName, string fileName = null, string tmpPath = null)
-        {
-            if (table.Rows.Count == 0) return 0;
-            tmpPath = tmpPath ?? FileHelper.GetCurrentDownLoadPath();
-            int insertCount = 0;
-            string csv = DataTableToCsv(table);
-            string text = $"当前行:{table.Rows.Count}";
-            MemoryStream stream = null;
-            try
-            {
-                using (var Connection = DBServerProvider.GetDbConnection(_connectionString, _dbCurrentType))
-                {
-                    if (Connection.State == ConnectionState.Closed)
-                    {
-                        Connection.Open();
-                    }
-                    using (IDbTransaction tran = Connection.BeginTransaction())
-                    {
-                        MySqlBulkLoader bulk = new MySqlBulkLoader(Connection as MySqlConnection)
-                        {
-                            LineTerminator = "\n",
-                            TableName = tableName,
-                            CharacterSet = "UTF8"
-                        };
-                        var array = Encoding.UTF8.GetBytes(csv);
-                        using (stream = new MemoryStream(array))
-                        {
-                            stream = new MemoryStream(array);
-                            bulk.SourceStream = stream; //File.OpenRead(fileName);
-                            bulk.Columns.AddRange(table.Columns.Cast<DataColumn>().Select(colum => colum.ColumnName).ToList());
-                            insertCount = bulk.Load();
-                            tran.Commit();
-                        }
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            return insertCount;
-            //   File.Delete(path);
-        }
         /// <summary>
         ///将DataTable转换为标准的CSV
         /// </summary>

@@ -462,7 +462,7 @@ namespace VOL.Core.Utilities
         {
             //&& x.IsDisplay == 1&&x.IsReadDataset==0只导出代码生器中设置为显示并且不是只读的列，可根据具体业务设置导出列
             // && x.IsReadDataset == 0
-            //2020.06.02增加不区分大表名大小写: 原因mysql可能是表名是小写，但生成model的时候强制大写
+            //2020.06.02增加不区分大表名大小写: 可能是表名是小写，但生成model的时候强制大写
             //x => x.TableName.ToLower() == tableName.ToLower()
             var query = DBServerProvider.DbContext.Set<Sys_TableColumn>().Where(x => x.TableName.ToLower() == tableName.ToLower());
             if (columns != null && columns.Length > 0)

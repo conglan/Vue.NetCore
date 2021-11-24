@@ -118,7 +118,7 @@ namespace VOL.System.Services
                 .Select(x => new { x.DicNo, x.DbSql })
                 .ToList();
             List<object> list = new List<object>();
-            string keySql = DBType.Name == DbCurrentType.MySql.ToString() ? "t.key" : "t.[key]";
+            string keySql = "t.[key]";
             dicInfo.ForEach(x =>
             {
                 if (keyData.TryGetValue(x.DicNo, out object[] data))
