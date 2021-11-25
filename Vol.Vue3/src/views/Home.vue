@@ -60,32 +60,32 @@ export default {
         {
           title: "GitHub",
           icon: "el-icon-set-up",
-          url: "https://github.com/cq-panda/Vue.NetCore",
+          url: "https://github.com/",
         },
         {
-          title: "Gitee",
+          title: "百度",
           icon: "el-icon-turn-off",
-          url: "https://gitee.com/x_discoverer/Vue.NetCore",
+          url: "https://baidu.com/",
         },
         {
-          title: "框架Vue2版本",
+          title: "Microsoft",
           icon: "el-icon-reading",
-          url: "http://v2.volcore.xyz",
+          url: "https://docs.microsoft.com/",
         },
 
         {
-          title: "框架文档",
+          title: "掘金",
           icon: "el-icon-document",
-          url: "http://v2.volcore.xyz/document/guide",
+          url: "https://juejin.cn/",
         },
 
         {
-          title: "大屏数据",
+          title: "待定",
           icon: "el-icon-chat-line-round",
-          url: "http://www.volcore.xyz/bigdata",
+          url: "",
         },
         {
-          title: "QQ群45221949",
+          title: "待定",
           icon: "el-icon-chat-dot-round",
           url: "",
         },
@@ -157,9 +157,6 @@ export default {
   },
 };
 var $chart, $chart2, $chart3
-// window.addEventListener("resize", function () {
-//   $chart2.setOption(chart2);
-// });
 </script>
 <style lang="less" scoped>
 .home-contianer {
