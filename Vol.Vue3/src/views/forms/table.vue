@@ -87,7 +87,7 @@ export default {
         UserName: "",
       },
       viewModel: false, //点击单元格时弹出框
-      url: "api/App_Expert/getPageData", //后从加载数据的url
+      url: "api/Sys_Dictionary/getPageData", //后从加载数据的url
       formFields: { price: null, age: null, variety: null,city:['北京','天坛'] },
       formOptions: [
         [

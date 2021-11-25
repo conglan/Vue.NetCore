@@ -103,7 +103,7 @@ export default {
         img: [
           {
             name: "060222.jpg",
-            path: "http://api.volcore.xyz/Upload/Tables/App_Expert/202103061753415708/060222.jpg",
+            path: "http://api.volcore.xyz/Upload/Tables/Sys_Dictionary/202103061753415708/060222.jpg",
           },
         ],
       },
@@ -278,6 +278,28 @@ export default {
             title: "只读文本",
             field: "Address",
             type: "label",
+          },
+          {
+            title: "图片",
+            required: true,
+            field: "img",
+            type: "img",
+            multiple: true,
+            maxFile: 2,
+            maxSize: 5,
+            url: "api/Sys_Dictionary/Upload",
+            //  colSize: 6, //设置宽度50%
+          },
+          {
+            title: "上传",
+            required: true,
+            field: "uploadFile",
+            type: "excel", //指定上传类型excel/img/file
+            multiple: true,
+            maxFile: 5,
+            maxSize: 3,
+            url: "api/Sys_Dictionary/Upload",
+            // colSize: 6, //设置宽度50%
           },
         ],
       ],

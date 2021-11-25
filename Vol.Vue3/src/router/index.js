@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import form from './form'
-import formsMulti from './formsMulti'
 import tables from './tables'
 import viewgird from './viewGird'
 import store from '../store/index'
@@ -14,7 +13,6 @@ const routes = [
     redirect: '/home',
     children: [
       ...form,//Demo表单路由
-      ...formsMulti,
       ...tables,//tables
       ...viewgird,
       ...redirect,

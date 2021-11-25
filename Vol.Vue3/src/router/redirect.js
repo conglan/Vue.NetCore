@@ -10,9 +10,5 @@ let redirect = [{
     path: '/401',
     name: '401',
     component: () => import('@/components/redirect/401')
-}, {
-    path: '/coding',
-    name: 'coding',
-    component: () => import('@/components/redirect/coding')
 }]
 export default redirect;

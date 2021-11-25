@@ -91,6 +91,11 @@ export default {
         ], //只读可下载的文件，格式与上面只读图片相同
         file7: [
           {
+            name: "(api后台文件)基础表单+编辑只读 (4).xlsx",
+            path:
+              "Upload/Tables/Sys_Dictionary/201911241454458938/基础表单+编辑只读 (4).xlsx"
+          },
+          {
             name: "(第三方服务器文件).xlsx",
             path:
               "https://files-1256993465.cos.ap-chengdu.myqcloud.com/测试现有文件可下载1.xlsx"
@@ -142,6 +147,23 @@ export default {
           }
         ],
         [
+          {
+            title: "自动上传",
+            field: "file1",
+            required: true,
+            maxSize: 1, //最大1M文件
+            url: "/api/Sys_Dictionary/Upload",
+            type: "file"
+          },
+          {
+            title: "上传excel",
+            field: "file2",
+            maxSize: 0.5, //最大0.5M文件
+            multiple: true, //启用多文件
+            maxFile: 2, //最多两个文件
+            url: "/api/Sys_Dictionary/Upload",
+            type: "excel"
+          },
               {
             title: "文件只读",
             readonly: true,
@@ -154,10 +176,45 @@ export default {
           }
         ],
         [
+          {
+            title: "上传下载",
+            autoUpload: false,
+            field: "file5",
+            maxSize: 1, //最大1M文件
+            multiple: true, //启用多文件
+            maxFile: 3, //最多3个文件
+            downLoad: true,
+            url: "/api/Sys_Dictionary/Upload",
+            type: "file",
+            fileClick(index, file, files) {
+              this.$Message.error(file.name);
+              return true;
+            }
+          },
             {
             title: "图片只读",
             field: "file6",
             readonly: true,
+            type: "img"
+          },
+          {
+            title: "手动上传",
+            field: "file4",
+            maxSize: 1, //最大1M文件
+            multiple: true, //启用多文件
+            maxFile: 3, //最多两个文件
+            url: "/api/Sys_Dictionary/Upload",
+            type: "img"
+          }
+        ],
+        [
+          {
+            title: "上传图片",
+            autoUpload: false,
+            field: "file3",
+            maxSize: 1, //最大1M文件
+            colSize: 12,
+            url: "/api/Sys_Dictionary/Upload",
             type: "img"
           }
         ]

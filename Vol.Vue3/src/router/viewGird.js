@@ -24,11 +24,12 @@ let viewgird = [
     path: '/Sys_Role',
     name: 'Sys_Role',
     component:  () => import('@/views/system/Sys_Role.vue' )
-  }, {
+  }, 
+  {
     path: '/Sys_Role1',
     name: 'Sys_Role1',
     component:  () => import('@/views/system/Sys_Role1.vue' )
-  }  , 
+  }, 
   {
     path: '/Sys_DictionaryList',
     name: 'Sys_DictionaryList',
