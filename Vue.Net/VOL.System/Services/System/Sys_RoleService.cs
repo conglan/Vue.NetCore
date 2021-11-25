@@ -12,16 +12,16 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.Services
 {
-    public partial class Sys_RoleService : ServiceBase<Sys_Role, ISys_RoleRepository>, ISys_RoleService, IDependency
+    public partial class SysRoleService : ServiceBase<SysRole, ISysRoleRepository>, ISysRoleService, IDependency
     {
-        public Sys_RoleService(ISys_RoleRepository repository)
+        public SysRoleService(ISysRoleRepository repository)
              : base(repository) 
         { 
            Init(repository);
         }
-        public static ISys_RoleService Instance
+        public static ISysRoleService Instance
         {
-           get { return AutofacContainerModule.GetService<ISys_RoleService>(); }
+           get { return AutofacContainerModule.GetService<ISysRoleService>(); }
         }
     }
 }

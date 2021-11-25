@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace VOL.Entity.DomainModels
+﻿namespace VOL.Entity.DomainModels
 {
     public class RoleAuthor
     {

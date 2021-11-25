@@ -8,13 +8,13 @@ using VOL.System.IServices;
 
 namespace VOL.System.Controllers
 {
-    [Route("api/menu")]
+    [Route("api/SysMenu")]
     [ApiController, JWTAuthorize()]
-    public partial class Sys_MenuController : ApiBaseController<ISys_MenuService>
+    public partial class SysMenuController : ApiBaseController<ISysMenuService>
     {
-        private ISys_MenuService _service { get; set; }
-        public Sys_MenuController(ISys_MenuService service) :
-            base("System", "System", "Sys_Menu", service)
+        private ISysMenuService _service { get; set; }
+        public SysMenuController(ISysMenuService service) :
+            base("System", "System", "SysMenu", service)
         {
             _service = service;
         } 

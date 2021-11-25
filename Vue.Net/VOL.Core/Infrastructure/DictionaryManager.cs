@@ -6,19 +6,20 @@ using VOL.Core.CacheManager;
 using VOL.Core.DBManager;
 using VOL.Core.Extensions.AutofacManager;
 using VOL.Core.Services;
+using VOL.Entity;
 using VOL.Entity.DomainModels;
 
 namespace VOL.Core.Infrastructure
 {
     public static class DictionaryManager
     {
-        private static List<Sys_Dictionary> _dictionaries { get; set; }
+        private static List<SysDictionary> _dictionaries { get; set; }
 
         private static object _dicObj = new object();
         private static string _dicVersionn = "";
         public const string Key = "inernalDic";
 
-        public static List<Sys_Dictionary> Dictionaries
+        public static List<SysDictionary> Dictionaries
         {
             get
             {
@@ -26,7 +27,7 @@ namespace VOL.Core.Infrastructure
             }
         }
 
-        public static Sys_Dictionary GetDictionary(string dicNo)
+        public static SysDictionary GetDictionary(string dicNo)
         {
             return GetDictionaries(new string[] { dicNo }).FirstOrDefault();
         }
@@ -36,13 +37,13 @@ namespace VOL.Core.Infrastructure
         /// <param name="dicNos"></param>
         /// <param name="executeSql">是否执行自定义sql</param>
         /// <returns></returns>
-        public static IEnumerable<Sys_Dictionary> GetDictionaries(IEnumerable<string> dicNos, bool executeSql = true)
+        public static IEnumerable<SysDictionary> GetDictionaries(IEnumerable<string> dicNos, bool executeSql = true)
         {
-            static List<Sys_DictionaryList> query(string sql)
+            static List<SysDictionaryList> query(string sql)
             {
                 try
                 {
-                    return DBServerProvider.SqlDapper.QueryList<SourceKeyVaule>(sql, null).Select(s => new Sys_DictionaryList()
+                    return DBServerProvider.SqlDapper.QueryList<SourceKeyVaule>(sql, null).Select(s => new SysDictionaryList()
                     {
                         DicName = s.Value,
                         DicValue = s.Key.ToString()
@@ -64,7 +65,7 @@ namespace VOL.Core.Infrastructure
                     string sql = DictionaryHandler.GetCustomDBSql(item.DicNo, item.DbSql);
                     if (!string.IsNullOrEmpty(item.DbSql))
                     {
-                        item.Sys_DictionaryList = query(sql);
+                        item.SysDictionaryList = query(sql);
                     }
                 }
                 yield return item;
@@ -74,7 +75,7 @@ namespace VOL.Core.Infrastructure
         /// 每次变更字典配置的时候会重新拉取所有配置进行缓存(自行根据实际处理)
         /// </summary>
         /// <returns></returns>
-        private static List<Sys_Dictionary> GetAllDictionary()
+        private static List<SysDictionary> GetAllDictionary()
         {
             ICacheService cacheService = AutofacContainerModule.GetService<ICacheService>();
             //每次比较缓存是否更新过，如果更新则重新获取数据
@@ -87,9 +88,9 @@ namespace VOL.Core.Infrastructure
             {
                 if (_dicVersionn != "" && _dictionaries != null && _dicVersionn == cacheService.Get(Key)) return _dictionaries;
                 _dictionaries = DBServerProvider.DbContext
-                    .Set<Sys_Dictionary>()
-                    .Where(x => x.Enable == 1)
-                    .Include(c => c.Sys_DictionaryList).ToList();
+                    .Set<SysDictionary>()
+                    .Where(x => x.Enable == EnableEnum.启用)
+                    .Include(c => c.SysDictionaryList).ToList();
 
                 string cacheVersion = cacheService.Get(Key);
                 if (string.IsNullOrEmpty(cacheVersion))

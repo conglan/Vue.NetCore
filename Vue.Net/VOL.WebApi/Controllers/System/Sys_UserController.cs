@@ -1,21 +1,16 @@
-﻿
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Mvc;
 using VOL.Core.Controllers.Basic;
 using VOL.Entity.AttributeManager;
-using VOL.Entity.DomainModels;
 using VOL.System.IServices;
 
 namespace VOL.System.Controllers
 {
-    [Route("api/Sys_User")]
-    [PermissionTable(Name = "Sys_User")]
-    public partial class Sys_UserController : ApiBaseController<ISys_UserService>
+    [Route("api/SysUser")]
+    [PermissionTable(Name = "SysUser")]
+    public partial class SysUserController : ApiBaseController<ISysUserService>
     {
-        public Sys_UserController(ISys_UserService service)
-        : base("System", "System", "Sys_User", service)
+        public SysUserController(ISysUserService service)
+        : base("System", "System", "SysUser", service)
         {
             //, IMemoryCache cache
         }

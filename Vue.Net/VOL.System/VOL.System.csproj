@@ -27,9 +27,4 @@
     <ProjectReference Include="..\VOL.Entity\VOL.Entity.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="IRepositories\System\" />
-    <Folder Include="IServices\System\" />
-  </ItemGroup>
-
 </Project>

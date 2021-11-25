@@ -8,10 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace VOL.Builder.Controllers
 {
-    public partial class Sys_TableInfoController : WebBaseController<ISys_TableInfoService>
+    public partial class SysTableInfoController : WebBaseController<ISysTableInfoService>
     {
-        public Sys_TableInfoController(ISys_TableInfoService service)
-        : base("Builder","Core","Sys_TableInfo", service)
+        public SysTableInfoController(ISysTableInfoService service)
+        : base("Builder","Core","SysTableInfo", service)
         {
         }
     }

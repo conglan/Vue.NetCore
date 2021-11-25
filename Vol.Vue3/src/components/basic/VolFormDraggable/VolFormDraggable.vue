@@ -573,7 +573,7 @@ export default {
     //  this.currentComponents = this.userComponents;
     this.currentComponents.push(...this.userComponents);
     this.http
-      .post("api/Sys_Dictionary/GetBuilderDictionary", {}, false)
+      .post("api/SysDictionary/GetBuilderDictionary", {}, false)
       .then((x) => {
         this.dicList = x.map((c) => {
           return { key: c, value: c };
@@ -770,7 +770,7 @@ export default {
         return;
       }
       this.http
-        .post("api/Sys_Dictionary/GetVueDictionary", keys, true)
+        .post("api/SysDictionary/GetVueDictionary", keys, true)
         .then((result) => {
           result.forEach((c) => {
             this.viewFormData.tables.forEach((t) => {
@@ -896,7 +896,7 @@ export default {
     },
     dicChange(key) {
       this.http
-        .post("api/Sys_Dictionary/GetVueDictionary", [key], true)
+        .post("api/SysDictionary/GetVueDictionary", [key], true)
         .then((result) => {
           this.currentItem.data = result[0].data;
           if (result[0].data.length) {

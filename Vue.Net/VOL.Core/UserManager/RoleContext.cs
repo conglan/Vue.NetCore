@@ -30,9 +30,9 @@ namespace VOL.Core.UserManager
             {
                 if (_RoleVersionn != "" && _roles != null && _RoleVersionn == cacheService.Get(Key)) return _roles;
                 _roles = DBServerProvider.DbContext
-                  .Set<Sys_Role>()
-                   .Where(x => x.Enable == 1)
-                   .Select(s => new RoleNodes() { Id = s.Role_Id, ParentId = s.ParentId, RoleName = s.RoleName })
+                  .Set<SysRole>()
+                   .Where(x => x.Enable == Entity.EnableEnum.启用)
+                   .Select(s => new RoleNodes() { Id = s.Id, ParentId = s.ParentId, RoleName = s.RoleName })
              .ToList();
 
                 string cacheVersion = cacheService.Get(Key);
@@ -59,12 +59,12 @@ namespace VOL.Core.UserManager
         /// </summary>
         /// <param name="roleId"></param>
         /// <returns></returns>
-        public static List<RoleNodes> GetAllChildren(int roleId)
+        public static List<RoleNodes> GetAllChildren(Guid roleId)
         {
-            if (roleId <= 0) return null;
+            if (roleId == Guid.Empty) return null;
             var roles = GetAllRoleId();
             if (UserContext.IsRoleIdSuperAdmin(roleId)) return roles;
-            Dictionary<int, bool> completedRoles = new Dictionary<int, bool>();
+            Dictionary<Guid, bool> completedRoles = new Dictionary<Guid, bool>();
             List<RoleNodes> rolesChildren = new List<RoleNodes>();
             var list= GetChildren(roles, rolesChildren, roleId, completedRoles);
             //2021.07.11增加无限递归异常数据移除当前节点
@@ -74,7 +74,7 @@ namespace VOL.Core.UserManager
             }
             return list;
         }
-        public static List<int> GetAllChildrenIds(int roleId)
+        public static List<Guid> GetAllChildrenIds(Guid roleId)
         {
             return GetAllChildren(roleId)?.Select(x => x.Id)?.ToList();
         }
@@ -82,7 +82,7 @@ namespace VOL.Core.UserManager
         /// 递归获取所有子节点权限
         /// </summary>
         /// <param name="roleId"></param>
-        private static List<RoleNodes> GetChildren(List<RoleNodes> roles, List<RoleNodes> rolesChildren, int roleId, Dictionary<int, bool> completedRoles)
+        private static List<RoleNodes> GetChildren(List<RoleNodes> roles, List<RoleNodes> rolesChildren, Guid roleId, Dictionary<Guid, bool> completedRoles)
         {
             //2021.07.11修复不能获取三级以下角色的问题
             roles.ForEach(x =>
@@ -93,7 +93,7 @@ namespace VOL.Core.UserManager
                     {
                         if (!isWrite)
                         {
-                            roles.Where(x => x.Id == roleId).FirstOrDefault().ParentId = 0;
+                            roles.Where(x => x.Id == roleId).FirstOrDefault().ParentId = Guid.Empty;
                             Logger.Error($"获取子角色异常RoleContext,角色id:{x.Id}");
                             Console.WriteLine($"获取子角色异常RoleContext,角色id:{x.Id}");
                             completedRoles[x.Id] = true;
@@ -114,7 +114,7 @@ namespace VOL.Core.UserManager
         /// 获取当前角色下的所有用户
         /// </summary>
         /// <returns></returns>
-        public static IQueryable<int> GetCurrentAllChildUser()
+        public static IQueryable<Guid> GetCurrentAllChildUser()
         {
             var roles = GetAllChildrenIds(UserContext.Current.RoleId);
             if (roles == null)
@@ -122,15 +122,15 @@ namespace VOL.Core.UserManager
                 throw new Exception("未获取到当前角色");
             }
             return DBServerProvider.DbContext
-                  .Set<Sys_User>()
-                  .Where(u => roles.Contains(u.Role_Id)).Select(s => s.User_Id);
+                  .Set<SysUser>()
+                  .Where(u => roles.Contains(u.RoleId)).Select(s => s.Id);
 
         }
     }
     public class RoleNodes
     {
-        public int Id { get; set; }
-        public int ParentId { get; set; }
+        public Guid Id { get; set; }
+        public Guid ParentId { get; set; }
         public string RoleName { get; set; }
     }
 }

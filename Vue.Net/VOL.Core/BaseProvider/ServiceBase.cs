@@ -1,13 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using VOL.Core.CacheManager;
 using VOL.Core.Configuration;
 using VOL.Core.Const;
@@ -21,12 +19,11 @@ using VOL.Core.Tenancy;
 using VOL.Core.Utilities;
 using VOL.Entity;
 using VOL.Entity.DomainModels;
-using VOL.Entity.SystemModels;
 
 namespace VOL.Core.BaseProvider
 {
     public abstract class ServiceBase<T, TRepository> : ServiceFunFilter<T>
-         where T : BaseEntity
+         where T : KeyEntity
          where TRepository : IRepository<T>
     {
         public ICacheService CacheContext
@@ -44,11 +41,13 @@ namespace VOL.Core.BaseProvider
                 return HttpContext.Current;
             }
         }
+
         private WebResponseContent Response { get; set; }
 
         protected IRepository<T> repository;
 
         private PropertyInfo[] _propertyInfo { get; set; } = null;
+
         private PropertyInfo[] TProperties
         {
             get
@@ -74,7 +73,6 @@ namespace VOL.Core.BaseProvider
 
         protected virtual void Init(IRepository<T> repository)
         {
-
         }
 
         /// <summary>
@@ -126,7 +124,6 @@ namespace VOL.Core.BaseProvider
             }
         }
 
-
         /// <summary>
         ///  2020.08.15添加多租户数据过滤（删除）
         /// </summary>
@@ -145,6 +142,7 @@ namespace VOL.Core.BaseProvider
         }
 
         private const string _asc = "asc";
+
         /// <summary>
         /// 生成排序字段
         /// </summary>
@@ -190,7 +188,6 @@ namespace VOL.Core.BaseProvider
                     pageData.Sort, pageData.Order?.ToLower() == _asc? QueryOrderBy.Asc: QueryOrderBy.Desc
                 } };
         }
-
 
         /// <summary>
         /// 验证排序与查询字段合法性
@@ -285,7 +282,6 @@ namespace VOL.Core.BaseProvider
             }
             GetPageDataOnExecuted?.Invoke(pageGridData);
             return pageGridData;
-
         }
 
         public virtual object GetDetailPage(PageDataOptions pageData)
@@ -300,6 +296,7 @@ namespace VOL.Core.BaseProvider
                  .MakeGenericMethod(new Type[] { detailType }).Invoke(this, new object[] { pageData });
             return obj;
         }
+
         protected override object GetDetailSummary<Detail>(IQueryable<Detail> queryeable)
         {
             return null;
@@ -334,8 +331,6 @@ namespace VOL.Core.BaseProvider
             gridData.summary = GetDetailSummary<Detail>(queryeable);
             return gridData;
         }
-
-
 
         /// <summary>
         /// 上传文件
@@ -804,7 +799,9 @@ namespace VOL.Core.BaseProvider
                 return _userIgnoreFields;
             }
         }
+
         private static string[] _createFields { get; set; }
+
         private static string[] CreateFields
         {
             get
@@ -818,6 +815,7 @@ namespace VOL.Core.BaseProvider
         }
 
         private static string[] _modifyFields { get; set; }
+
         private static string[] ModifyFields
         {
             get
@@ -852,7 +850,6 @@ namespace VOL.Core.BaseProvider
             //设置修改时间,修改人的默认值
             UserInfo userInfo = UserContext.Current.UserInfo;
             saveModel.SetDefaultVal(AppSetting.ModifyMember, userInfo);
-
 
             //判断提交的数据与实体格式是否一致
             string result = type.ValidateDicInEntity(saveModel.MainData, true, false, UserIgnoreFields);
@@ -921,7 +918,6 @@ namespace VOL.Core.BaseProvider
                     return Response;
                 }
             }
-
 
             Expression<Func<T, bool>> expression = mainKeyProperty.Name.CreateExpression<T>(mainKeyVal.ToString(), LinqExpressionType.Equal);
             if (!repository.Exists(expression)) return Response.Error("保存的数据不存在!");
@@ -1009,7 +1005,7 @@ namespace VOL.Core.BaseProvider
         #endregion
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="keys"></param>
         /// <param name="delList">是否删除明细数据(默认会删除明细)</param>
@@ -1117,17 +1113,21 @@ namespace VOL.Core.BaseProvider
                     switch (item.Name.ToLower())
                     {
                         case "auditid":
-                            item.SetValue(entity, userInfo.User_Id);
+                            item.SetValue(entity, userInfo.UserId);
                             break;
+
                         case "auditstatus":
                             item.SetValue(entity, auditStatus);
                             break;
+
                         case "auditor":
                             item.SetValue(entity, userInfo.UserTrueName);
                             break;
+
                         case "auditdate":
                             item.SetValue(entity, DateTime.Now);
                             break;
+
                         case "auditreason":
                             item.SetValue(entity, auditReason);
                             break;
@@ -1168,7 +1168,7 @@ namespace VOL.Core.BaseProvider
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <typeparam name="TInput"></typeparam>
         /// <param name="bizContent"></param>
@@ -1213,14 +1213,6 @@ namespace VOL.Core.BaseProvider
         /// <param name="source"></param>
         /// <param name="resultExpression">只映射返回对象的指定字段</param>
         /// <param name="sourceExpression">只映射数据源对象的指定字段</param>
-        /// 过滤条件表达式调用方式：List表达式x => new { x[0].MenuName, x[0].Menu_Id}，表示指定映射MenuName,Menu_Id字段
-        ///  List<Sys_Menu> list = new List<Sys_Menu>();
-        ///  list.MapToObject<List<Sys_Menu>, List<Sys_Menu>>(x => new { x[0].MenuName, x[0].Menu_Id}, null);
-        ///  
-        ///过滤条件表达式调用方式：实体表达式x => new { x.MenuName, x.Menu_Id}，表示指定映射MenuName,Menu_Id字段
-        ///  Sys_Menu sysMenu = new Sys_Menu();
-        ///  sysMenu.MapToObject<Sys_Menu, Sys_Menu>(x => new { x.MenuName, x.Menu_Id}, null);
-        /// <returns></returns>
         public virtual TResult MapToEntity<TSource, TResult>(TSource source, Expression<Func<TResult, object>> resultExpression,
             Expression<Func<TSource, object>> sourceExpression = null) where TResult : class
         {
@@ -1240,6 +1232,7 @@ namespace VOL.Core.BaseProvider
         {
             source.MapValueToEntity<TSource, TResult>(result, expression);
         }
+
         /// <summary>
         /// 2021.07.04增加code="-1"强制返回，具体使用见：后台开发文档->后台基础代码扩展实现
         /// </summary>

@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using VOL.Core.CacheManager;
 using VOL.Core.DBManager;
 using VOL.Core.Enums;
@@ -37,6 +36,7 @@ namespace VOL.Core.ManageUser
                 return Utilities.HttpContext.Current;
             }
         }
+
         private static ICacheService CacheService
         {
             get { return GetService<ICacheService>(); }
@@ -68,31 +68,32 @@ namespace VOL.Core.ManageUser
         {
             get { return IsRoleIdSuperAdmin(this.RoleId); }
         }
+
         /// <summary>
         /// 角色ID为1的默认为超级管理员
         /// </summary>
-        public static bool IsRoleIdSuperAdmin(int roleId)
+        public static bool IsRoleIdSuperAdmin(Guid roleId)
         {
-            return roleId == 1;
+            return DBServerProvider.DbContext.Set<SysRole>().Any(a => a.Id == roleId && a.SuperAdmin == true);
         }
 
-        public UserInfo GetUserInfo(int userId)
+        public UserInfo GetUserInfo(Guid userId)
         {
             if (_userInfo != null) return _userInfo;
-            if (userId <= 0)
+            if (userId == Guid.Empty)
             {
                 _userInfo = new UserInfo();
                 return _userInfo;
             }
             string key = userId.GetUserIdKey();
             _userInfo = CacheService.Get<UserInfo>(key);
-            if (_userInfo != null && _userInfo.User_Id > 0) return _userInfo;
+            if (_userInfo != null && _userInfo.UserId != Guid.Empty) return _userInfo;
 
-            _userInfo = DBServerProvider.DbContext.Set<Sys_User>()
-                .Where(x => x.User_Id == userId).Select(s => new UserInfo()
+            _userInfo = DBServerProvider.DbContext.Set<SysUser>()
+                .Where(x => x.Id == userId).Select(s => new UserInfo()
                 {
-                    User_Id = userId,
-                    Role_Id = s.Role_Id.GetInt(),
+                    UserId = userId,
+                    RoleId = s.RoleId,
                     RoleName = s.RoleName,
                     Token = s.Token,
                     UserName = s.UserName,
@@ -100,7 +101,7 @@ namespace VOL.Core.ManageUser
                     Enable = s.Enable
                 }).FirstOrDefault();
 
-            if (_userInfo != null && _userInfo.User_Id > 0)
+            if (_userInfo != null && _userInfo.UserId != Guid.Empty)
             {
                 CacheService.AddObject(key, _userInfo);
             }
@@ -115,14 +116,13 @@ namespace VOL.Core.ManageUser
         /// <summary>
         /// 角色权限的版本号
         /// </summary>
-        private static readonly Dictionary<int, string> rolePermissionsVersion = new Dictionary<int, string>();
+        private static readonly Dictionary<Guid, string> rolePermissionsVersion = new Dictionary<Guid, string>();
 
         /// <summary>
         /// 每个角色ID对应的菜单权限（已做静态化处理）
         /// 每次获取权限时用当前服务器的版本号与redis/memory缓存的版本比较,如果不同会重新刷新缓存
         /// </summary>
-        private static readonly Dictionary<int, List<Permissions>> rolePermissions = new Dictionary<int, List<Permissions>>();
-
+        private static readonly Dictionary<Guid, List<Permissions>> rolePermissions = new Dictionary<Guid, List<Permissions>>();
 
         /// <summary>
         /// 获取用户所有的菜单权限
@@ -132,7 +132,7 @@ namespace VOL.Core.ManageUser
         {
             get
             {
-                return GetPermissions(RoleId);
+                return GetPermissionList(RoleId);
             }
         }
 
@@ -143,7 +143,7 @@ namespace VOL.Core.ManageUser
         /// <returns></returns>
         public Permissions GetPermissions(string tableName)
         {
-            return GetPermissions(RoleId).Where(x => x.TableName == tableName).FirstOrDefault();
+            return GetPermissionList(RoleId).Where(x => x.TableName == tableName).FirstOrDefault();
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace VOL.Core.ManageUser
         /// <returns></returns>
         public Permissions GetPermissions(Func<Permissions, bool> func)
         {
-            return GetPermissions(RoleId).Where(func).FirstOrDefault();
+            return GetPermissionList(RoleId).Where(func).FirstOrDefault();
         }
 
         private List<Permissions> ActionToArray(List<Permissions> permissions)
@@ -177,6 +177,7 @@ namespace VOL.Core.ManageUser
             });
             return permissions;
         }
+
         private List<Permissions> MenuActionToArray(List<Permissions> permissions)
         {
             permissions.ForEach(x =>
@@ -185,7 +186,7 @@ namespace VOL.Core.ManageUser
                 {
                     x.UserAuthArr = string.IsNullOrEmpty(x.UserAuth)
                     ? new string[0]
-                    : x.UserAuth.DeserializeObject<List<Sys_Actions>>().Select(s => s.Value).ToArray();
+                    : x.UserAuth.DeserializeObject<List<SysActions>>().Select(s => s.Value).ToArray();
                 }
                 catch { }
                 finally
@@ -198,20 +199,18 @@ namespace VOL.Core.ManageUser
             });
             return permissions;
         }
-        public List<Permissions> GetPermissions(int roleId)
+
+        public List<Permissions> GetPermissionList(Guid roleId)
         {
             if (IsRoleIdSuperAdmin(roleId))
             {
-                //2020.12.27增加菜单界面上不显示，但可以分配权限
-                var permissions = DBServerProvider.DbContext.Set<Sys_Menu>()
-                    .Where(x => x.Enable == 1 || x.Enable == 2)
+                var permissions = DBServerProvider.DbContext.Set<SysMenu>()
+                    .Where(x => x.Enable == EnableEnum.禁用 || x.Enable == EnableEnum.启用)
                     .Select(a => new Permissions
                     {
-                        Menu_Id = a.Menu_Id,
+                        MenuId = a.Id,
                         ParentId = a.ParentId,
-                        //2020.05.06增加默认将表名转换成小写，权限验证时不再转换
                         TableName = (a.TableName ?? "").ToLower(),
-                        //MenuAuth = a.Auth,
                         UserAuth = a.Auth,
                     }).ToList();
                 return MenuActionToArray(permissions);
@@ -240,17 +239,16 @@ namespace VOL.Core.ManageUser
 
                 //没有redis/memory缓存角色的版本号或与当前服务器的角色版本号不同时，刷新缓存
                 var dbContext = DBServerProvider.DbContext;
-                List<Permissions> _permissions = (from a in dbContext.Set<Sys_Menu>()
-                                                  join b in dbContext.Set<Sys_RoleAuth>()
-                                                  on a.Menu_Id equals b.Menu_Id
-                                                  where b.Role_Id == roleId //&& a.ParentId > 0
+                List<Permissions> _permissions = (from a in dbContext.Set<SysMenu>()
+                                                  join b in dbContext.Set<SysRoleAuth>()
+                                                  on a.Id equals b.MenuId
+                                                  where b.Id == roleId //&& a.ParentId > 0
                                                   && b.AuthValue != ""
                                                   orderby a.ParentId
                                                   select new Permissions
                                                   {
-                                                      Menu_Id = a.Menu_Id,
+                                                      MenuId = a.Id,
                                                       ParentId = a.ParentId,
-                                                      //2020.05.06增加默认将表名转换成小写，权限验证时不再转换
                                                       TableName = (a.TableName ?? "").ToLower(),
                                                       MenuAuth = a.Auth,
                                                       UserAuth = b.AuthValue ?? ""
@@ -271,7 +269,6 @@ namespace VOL.Core.ManageUser
                 rolePermissionsVersion[roleId] = _version;
                 return _permissions;
             }
-
         }
 
         /// <summary>
@@ -281,12 +278,12 @@ namespace VOL.Core.ManageUser
         /// <param name="authName"></param>
         /// <param name="roleId"></param>
         /// <returns></returns>
-        public bool ExistsPermissions(string tableName, string authName, int roleId = 0)
+        public bool ExistsPermissions(string tableName, string authName, Guid roleId)
         {
-            if (roleId <= 0) roleId = RoleId;
+            if (roleId == Guid.Empty) roleId = RoleId;
             tableName = tableName.ToLower();
             authName = authName.ToLower();
-            return GetPermissions(roleId).Any(x => x.TableName == tableName && x.UserAuthArr.Contains(authName));
+            return GetPermissionList(roleId).Any(x => x.TableName == tableName && x.UserAuthArr.Contains(authName));
         }
 
         /// <summary>
@@ -296,16 +293,17 @@ namespace VOL.Core.ManageUser
         /// <param name="authName"></param>
         /// <param name="roleId"></param>
         /// <returns></returns>
-        public bool ExistsPermissions(string tableName, ActionPermissionOptions actionPermission, int roleId = 0)
+        public bool ExistsPermissions(string tableName, ActionPermissionOptions actionPermission, Guid roleId)
         {
             return ExistsPermissions(tableName, actionPermission.ToString(), roleId);
         }
-        public int UserId
+
+        public Guid UserId
         {
             get
             {
-                return (Context.User.FindFirstValue(JwtRegisteredClaimNames.Jti)
-                    ?? Context.User.FindFirstValue(ClaimTypes.NameIdentifier)).GetInt();
+                return Guid.Parse((Context.User.FindFirstValue(JwtRegisteredClaimNames.Jti)
+                    ?? Context.User.FindFirstValue(ClaimTypes.NameIdentifier)));
             }
         }
 
@@ -324,12 +322,12 @@ namespace VOL.Core.ManageUser
             get { return UserInfo.Token; }
         }
 
-        public int RoleId
+        public Guid RoleId
         {
-            get { return UserInfo.Role_Id; }
+            get { return UserInfo.RoleId; }
         }
 
-        public void LogOut(int userId)
+        public void LogOut(Guid userId)
         {
             CacheService.Remove(userId.GetUserIdKey());
         }

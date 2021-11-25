@@ -6,16 +6,16 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.Services
 {
-    public partial class Sys_MenuService : ServiceBase<Sys_Menu, ISys_MenuRepository>, ISys_MenuService, IDependency
+    public partial class SysMenuService : ServiceBase<SysMenu, ISysMenuRepository>, ISysMenuService, IDependency
     {
-        public Sys_MenuService(ISys_MenuRepository repository)
+        public SysMenuService(ISysMenuRepository repository)
              : base(repository) 
         { 
            Init(repository);
         }
-        public static ISys_MenuService Instance
+        public static ISysMenuService Instance
         {
-           get { return AutofacContainerModule.GetService<ISys_MenuService>(); }
+           get { return AutofacContainerModule.GetService<ISysMenuService>(); }
         }
     }
 }

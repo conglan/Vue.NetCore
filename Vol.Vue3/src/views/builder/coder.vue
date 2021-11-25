@@ -476,7 +476,7 @@ export default {
     let clientHeight = document.documentElement.clientHeight - 170;
     this.tableHeight = clientHeight < 400 ? 400 : clientHeight;
     this.http
-      .post("/api/Sys_Dictionary/GetBuilderDictionary", {}, true)
+      .post("/api/SysDictionary/GetBuilderDictionary", {}, true)
       .then((dic) => {
         let column = this.layOutOptins.columns.find((x) => {
           return x.field == "dropNo";

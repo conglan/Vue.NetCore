@@ -1,14 +1,9 @@
-﻿using VOL.System.IRepositories;
-using VOL.Core.BaseProvider;
-using VOL.Core.Extensions.AutofacManager;
-using VOL.Core.EFDbContext;
-using VOL.Entity.DomainModels;
+﻿using VOL.Core.EFDbContext;
 
 namespace VOL.System.Repositories
 {
-    public partial class Sys_MenuRepository
+    public partial class SysMenuRepository
     {
         public override VOLContext DbContext => base.DbContext;
     }
 }
-

@@ -1,49 +1,48 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using VOL.Core.Utilities;
-using VOL.Entity.DomainModels;
 using VOL.System.Services;
 
 namespace VOL.System.IServices
 {
-    public partial interface ISys_RoleService
+    public partial interface ISysRoleService
     {
-
-        Task<WebResponseContent> GetUserTreePermission(int role_Id);
+        Task<WebResponseContent> GetUserTreePermission(Guid roleId);
 
         Task<WebResponseContent> GetCurrentUserTreePermission();
 
         Task<WebResponseContent> GetCurrentTreePermission();
 
-        Task<WebResponseContent> SavePermission(List<UserPermissions> userPermissions, int roleId);
-        /// <summary>
-        /// 获取角色下所有的角色
-        /// </summary>
-        /// <param name="roleId"></param>
-        /// <returns></returns>
-        Task<List<RoleNodes>> GetAllChildrenAsync(int roleId);
+        Task<WebResponseContent> SavePermission(List<UserPermissions> userPermissions, Guid roleId);
 
         /// <summary>
         /// 获取角色下所有的角色
         /// </summary>
         /// <param name="roleId"></param>
         /// <returns></returns>
-        List<RoleNodes> GetAllChildren(int roleId);
+        Task<List<RoleNodes>> GetAllChildrenAsync(Guid roleId);
+
+        /// <summary>
+        /// 获取角色下所有的角色
+        /// </summary>
+        /// <param name="roleId"></param>
+        /// <returns></returns>
+        List<RoleNodes> GetAllChildren(Guid roleId);
 
         /// <summary>
         /// 获取角色下所有的角色Id
         /// </summary>
         /// <param name="roleId"></param>
         /// <returns></returns>
-        Task<List<int>> GetAllChildrenRoleIdAsync(int roleId);
+        Task<List<Guid>> GetAllChildrenRoleIdAsync(Guid roleId);
 
-        List<int> GetAllChildrenRoleId(int roleId);
+        List<Guid> GetAllChildrenRoleId(Guid roleId);
+
         /// <summary>
         /// 获取当前角色下的所有角色包括自己的角色Id
         /// </summary>
         /// <returns></returns>
-        List<int> GetAllChildrenRoleIdAndSelf();
-
+        List<Guid> GetAllChildrenRoleIdAndSelf();
     }
 }
-

@@ -11,8 +11,8 @@ namespace VOL.WebApi.Controllers.Builder
     [Route("/api/Builder")]
     public class BuilderController : Controller
     {
-        private ISys_TableInfoService Service;
-        public BuilderController(ISys_TableInfoService service)
+        private ISysTableInfoService Service;
+        public BuilderController(ISysTableInfoService service)
         {
             Service = service;
         }
@@ -36,28 +36,28 @@ namespace VOL.WebApi.Controllers.Builder
         [Route("CreatePage")]
         [ApiActionPermission(ActionRolePermission.SuperAdmin)]
         [HttpPost]
-        public ActionResult CreatePage([FromBody] Sys_TableInfo sysTableInfo)
+        public ActionResult CreatePage([FromBody] SysTableInfo sysTableInfo)
         {
             return Content(Service.CreatePage(sysTableInfo));
         }
         [Route("CreateVuePage")]
         [ApiActionPermission(ActionRolePermission.SuperAdmin)]
         [HttpPost]
-        public ActionResult CreateVuePage([FromBody] Sys_TableInfo sysTableInfo, string vuePath)
+        public ActionResult CreateVuePage([FromBody] SysTableInfo sysTableInfo, string vuePath)
         {
             return Content(Service.CreateVuePage(sysTableInfo, vuePath));
         }
         [Route("CreateModel")]
         [ApiActionPermission(ActionRolePermission.SuperAdmin)]
         [HttpPost]
-        public ActionResult CreateEntityModel([FromBody] Sys_TableInfo tableInfo)
+        public ActionResult CreateEntityModel([FromBody] SysTableInfo tableInfo)
         {
             return Content(Service.CreateEntityModel(tableInfo));
         }
         [Route("Save")]
         [ApiActionPermission(ActionRolePermission.SuperAdmin)]
         [HttpPost]
-        public ActionResult SaveEidt([FromBody] Sys_TableInfo tableInfo)
+        public ActionResult SaveEidt([FromBody] SysTableInfo tableInfo)
         {
             return Json(Service.SaveEidt(tableInfo));
         }
@@ -70,7 +70,7 @@ namespace VOL.WebApi.Controllers.Builder
         }
         [Route("LoadTableInfo")]
         [HttpPost]
-        public ActionResult LoadTable(int parentId, string tableName, string columnCNName, string nameSpace, string foldername, int table_Id, bool isTreeLoad)
+        public ActionResult LoadTable(Guid parentId, string tableName, string columnCNName, string nameSpace, string foldername, Guid table_Id, bool isTreeLoad)
         {
             return Json(Service.LoadTable(parentId, tableName, columnCNName, nameSpace, foldername, table_Id, isTreeLoad));
 
@@ -78,7 +78,7 @@ namespace VOL.WebApi.Controllers.Builder
         [Route("delTree")]
         [ApiActionPermission(ActionRolePermission.SuperAdmin)]
         [HttpPost]
-        public async Task<ActionResult> DelTree(int table_Id)
+        public async Task<ActionResult> DelTree(Guid table_Id)
         {
             return Json(await Service.DelTree(table_Id));
         }

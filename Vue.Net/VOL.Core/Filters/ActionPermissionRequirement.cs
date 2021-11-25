@@ -21,7 +21,7 @@ namespace VOL.Core.Filters
         /// <summary>
         /// 限制只能由某些角色Id访问
         /// </summary>
-        public int[] RoleIds { get; set; }
+        public Guid[] RoleIds { get; set; }
 
         public bool IsApi { get; set; }
     }

@@ -83,7 +83,7 @@ export default {
       }
     });
     if (keys.length == 0) return;
-    this.http.post("/api/Sys_Dictionary/GetVueDictionary", keys).then(dic => {
+    this.http.post("/api/SysDictionary/GetVueDictionary", keys).then(dic => {
       dic.forEach(x => {
         columnBind.forEach(c => {
           if (c.key == x.dicNo) {

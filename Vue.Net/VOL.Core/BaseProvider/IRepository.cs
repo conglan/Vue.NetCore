@@ -9,19 +9,19 @@ using VOL.Core.Dapper;
 using VOL.Core.EFDbContext;
 using VOL.Core.Enums;
 using VOL.Core.Utilities;
-using VOL.Entity.SystemModels;
+using VOL.Entity;
 
 namespace VOL.Core.BaseProvider
 {
-    public interface IRepository<TEntity> where TEntity : BaseEntity
+    public interface IRepository<TEntity> where TEntity : KeyEntity
     {
-
         /// <summary>
         /// EF DBContext
         /// </summary>
         VOLContext DbContext { get; }
 
         ISqlDapper DapperContext { get; }
+
         /// <summary>
         /// 执行事务。将在执行的方法带入Action
         /// </summary>
@@ -29,7 +29,6 @@ namespace VOL.Core.BaseProvider
         /// <returns></returns>
         WebResponseContent DbContextBeginTransaction(Func<WebResponseContent> action);
 
-    
         /// <summary>
         /// 通过条件查询数据
         /// </summary>
@@ -38,7 +37,7 @@ namespace VOL.Core.BaseProvider
         List<TEntity> Find(Expression<Func<TEntity, bool>> where);
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="predicate"></param>
         /// <param name="orderBySelector">排序字段,数据格式如:
@@ -46,15 +45,13 @@ namespace VOL.Core.BaseProvider
         ///          { x.BalconyName,QueryOrderBy.Asc},
         ///          { x.TranCorpCode1,QueryOrderBy.Desc}
         ///         };
-        /// 
+        ///
         /// </param>
         /// <returns></returns>
         TEntity FindFirst(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, Dictionary<object, QueryOrderBy>>> orderBy = null);
 
-
-
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="predicate">where条件</param>
         /// <param name="orderBy">排序字段,数据格式如:
@@ -65,6 +62,7 @@ namespace VOL.Core.BaseProvider
         /// </param>
         /// <returns></returns>
         IQueryable<TEntity> FindAsIQueryable(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, Dictionary<object, QueryOrderBy>>> orderBy = null);
+
         /// <summary>
         /// 通过条件查询数据
         /// </summary>
@@ -73,8 +71,6 @@ namespace VOL.Core.BaseProvider
         /// <param name="selector">返回类型如:Find(x => x.UserName == loginInfo.userName, p => new { uname = p.UserName });</param>
         /// <returns></returns>
         List<T> Find<T>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, T>> selector);
-
-
 
         /// <summary>
         /// 根据条件，返回查询的类
@@ -89,6 +85,7 @@ namespace VOL.Core.BaseProvider
         Task<TEntity> FindAsyncFirst(Expression<Func<TEntity, bool>> predicate);
 
         Task<List<TFind>> FindAsync<TFind>(Expression<Func<TFind, bool>> predicate) where TFind : class;
+
         Task<TEntity> FindFirstAsync(Expression<Func<TEntity, bool>> predicate);
 
         Task<List<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
@@ -107,6 +104,7 @@ namespace VOL.Core.BaseProvider
         List<TEntity> Find<Source>(IEnumerable<Source> sources,
             Func<Source, Expression<Func<TEntity, bool>>> predicate)
             where Source : class;
+
         /// <summary>
         /// 多条件查询
         /// </summary>
@@ -140,8 +138,9 @@ namespace VOL.Core.BaseProvider
         Task<bool> ExistsAsync<TExists>(Expression<Func<TExists, bool>> predicate) where TExists : class;
 
         IIncludableQueryable<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, TProperty>> incluedProperty);
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="pageIndex"></param>
@@ -159,8 +158,9 @@ namespace VOL.Core.BaseProvider
         List<TResult> QueryByPage<TResult>(int pageIndex, int pagesize, out int rowcount, Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, Dictionary<object, QueryOrderBy>>> orderBySelector, Expression<Func<TEntity, TResult>> selectorResult, bool returnRowCount = true);
 
         List<TResult> QueryByPage<TResult>(int pageIndex, int pagesize, Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, Dictionary<object, QueryOrderBy>>> orderBy, Expression<Func<TEntity, TResult>> selectorResult = null);
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="pageIndex"></param>
         /// <param name="pagesize"></param>
@@ -177,11 +177,10 @@ namespace VOL.Core.BaseProvider
 
         IQueryable<TFind> IQueryablePage<TFind>(int pageIndex, int pagesize, out int rowcount, Expression<Func<TFind, bool>> predicate, Expression<Func<TEntity, Dictionary<object, QueryOrderBy>>> orderBy, bool returnRowCount = true) where TFind : class;
 
-
         IQueryable<TEntity> IQueryablePage(IQueryable<TEntity> queryable, int pageIndex, int pagesize, out int rowcount, Dictionary<string, QueryOrderBy> orderBy, bool returnRowCount = true);
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="properties">指定更新字段:x=>new {x.Name,x.Enable}</param>
@@ -191,7 +190,7 @@ namespace VOL.Core.BaseProvider
         int Update(TEntity entity, Expression<Func<TEntity, object>> properties, bool saveChanges = false);
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="properties">指定更新字段:x=>new {x.Name,x.Enable}</param>
@@ -204,8 +203,9 @@ namespace VOL.Core.BaseProvider
         int Update<TSource>(TSource entity, string[] properties, bool saveChanges = false) where TSource : class;
 
         int UpdateRange<TSource>(IEnumerable<TSource> entities, bool saveChanges = false) where TSource : class;
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="properties">指定更新字段:x=>new {x.Name,x.Enable}</param>
@@ -214,7 +214,6 @@ namespace VOL.Core.BaseProvider
         int UpdateRange<TSource>(IEnumerable<TSource> models, Expression<Func<TSource, object>> properties, bool saveChanges = false) where TSource : class;
 
         int UpdateRange<TSource>(IEnumerable<TSource> entities, string[] properties, bool saveChanges = false) where TSource : class;
-
 
         /// <summary>
         ///修改时同时对明细的添加、删除、修改
@@ -233,10 +232,10 @@ namespace VOL.Core.BaseProvider
             Expression<Func<Detail, object>> updateDetailFields = null,
             bool saveChange = false) where Detail : class;
 
-        void Delete(TEntity model, bool saveChanges=false);
+        void Delete(TEntity model, bool saveChanges = false);
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="keys"></param>
         /// <param name="delList">是否将子表的数据也删除</param>
@@ -244,22 +243,21 @@ namespace VOL.Core.BaseProvider
         int DeleteWithKeys(object[] keys, bool delList = false);
 
         void Add(TEntity entities, bool SaveChanges = false);
+
         void AddRange(IEnumerable<TEntity> entities, bool SaveChanges = false);
 
         Task AddAsync(TEntity entities);
+
         Task AddRangeAsync(IEnumerable<TEntity> entities);
 
         void AddRange<T>(IEnumerable<T> entities, bool saveChanges = false)
            where T : class;
 
-
-       void BulkInsert(IEnumerable<TEntity> entities, bool setOutputIdentity = false);
+        void BulkInsert(IEnumerable<TEntity> entities, bool setOutputIdentity = false);
 
         int SaveChanges();
 
         Task<int> SaveChangesAsync();
-
-
 
         int ExecuteSqlCommand(string sql, params SqlParameter[] sqlParameters);
 
@@ -275,13 +273,13 @@ namespace VOL.Core.BaseProvider
         /// <returns></returns>
         IQueryable<TEntity> FromSqlInterpolated([System.Diagnostics.CodeAnalysis.NotNull] FormattableString sql);
 
-
         /// <summary>
         /// 取消上下文跟踪(2021.08.22)
         /// 更新报错时，请调用此方法：The instance of entity type 'XXX' cannot be tracked because another instance with the same key value for {'XX'} is already being tracked.
         /// </summary>
         /// <param name="entity"></param>
         void Detached(TEntity entity);
+
         void DetachedRange(IEnumerable<TEntity> entities);
     }
 }

@@ -513,7 +513,7 @@ export default defineComponent({
     });
     if (keys.length > 0) {
       this.http
-        .post("/api/Sys_Dictionary/GetVueDictionary", keys)
+        .post("/api/SysDictionary/GetVueDictionary", keys)
         .then((dic) => {
           dic.forEach((x) => {
             columnBind.forEach((c) => {
@@ -994,7 +994,7 @@ export default defineComponent({
       if (remoteInfo.length == 0) return;
       // ha= Object.assign([], ha, hb)
       this.http
-        .post("/api/Sys_Dictionary/GetTableDictionary", remoteInfo)
+        .post("/api/SysDictionary/GetTableDictionary", remoteInfo)
         .then((dic) => {
           dic.forEach((x) => {
             this.remoteColumns.forEach((column) => {

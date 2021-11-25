@@ -44,11 +44,11 @@ namespace VOL.Core.Extensions
             DateTime dateTime = new DateTime(longTime + Convert.ToInt64(timeStamp) * samllTime, DateTimeKind.Utc).ToLocalTime();
             return dateTime;
         }
-        public static string CreateHtmlParas(this string urlPath, int? userId = null)
+        public static string CreateHtmlParas(this string urlPath, Guid? userId = null)
         {
             if (string.IsNullOrEmpty(urlPath))
                 return null;
-            userId = userId ?? UserContext.Current.UserInfo.User_Id;
+            userId = userId ?? UserContext.Current.UserInfo.UserId;
             return $"{urlPath}{(urlPath.IndexOf("?token") > 0 ? "&" : "?")}uid={userId}&rt_v={DateTime.Now.ToString("HHmmss")}";
             //  return urlPath + ((urlPath.IndexOf("?token") > 0 ? "&" : "?") + "uid=" + userId);
         }

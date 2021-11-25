@@ -14,7 +14,7 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.Services
 {
-    public partial class Sys_UserService
+    public partial class SysUserService
     {
         /// <summary>
         /// WebApi登陆
@@ -40,7 +40,7 @@ namespace VOL.System.Services
             }
             try
             {
-                Sys_User user = await repository.FindAsIQueryable(x => x.UserName == loginInfo.UserName)
+                SysUser user = await repository.FindAsIQueryable(x => x.UserName == loginInfo.UserName)
                     .FirstOrDefaultAsync();
 
                 if (user == null || loginInfo.Password.Trim() != (user.UserPwd ?? "").DecryptDES(AppSetting.Secret.User))
@@ -48,14 +48,14 @@ namespace VOL.System.Services
 
                 string token = JwtHelper.IssueJwt(new UserInfo()
                 {
-                    User_Id = user.User_Id,
+                    UserId = user.Id,
                     UserName = user.UserName,
-                    Role_Id = user.Role_Id
+                    RoleId = user.RoleId
                 });
                 user.Token = token;
                 responseContent.Data = new { token, userName = user.UserTrueName, img = user.HeadImageUrl };
                 repository.Update(user, x => x.Token, true);
-                UserContext.Current.LogOut(user.User_Id);
+                UserContext.Current.LogOut(user.Id);
 
                 loginInfo.Password = string.Empty;
 
@@ -90,15 +90,15 @@ namespace VOL.System.Services
 
                 if (JwtHelper.IsExp(requestToken)) return responseContent.Error("Token已过期!");
 
-                int userId = UserContext.Current.UserId;
+                Guid userId = UserContext.Current.UserId;
                 userInfo = await
-                     repository.FindFirstAsync(x => x.User_Id == userId,
+                     repository.FindFirstAsync(x => x.Id == userId,
                      s => new UserInfo()
                      {
-                         User_Id = userId,
+                         UserId = userId,
                          UserName = s.UserName,
                          UserTrueName = s.UserTrueName,
-                         Role_Id = s.Role_Id,
+                         RoleId = s.RoleId,
                          RoleName = s.RoleName
                      });
 
@@ -108,7 +108,7 @@ namespace VOL.System.Services
                 //移除当前缓存
                 base.CacheContext.Remove(userId.GetUserIdKey());
                 //只更新的token字段
-                repository.Update(new Sys_User() { User_Id = userId, Token = token }, x => x.Token, true);
+                repository.Update(new SysUser() { Id = userId, Token = token }, x => x.Token, true);
                 responseContent.OK(null, token);
             }
             catch (Exception ex)
@@ -118,7 +118,7 @@ namespace VOL.System.Services
             }
             finally
             {
-                Logger.Info(LoggerType.ReplaceToeken, ($"用户Id:{userInfo?.User_Id},用户{userInfo?.UserTrueName}")
+                Logger.Info(LoggerType.ReplaceToeken, ($"用户Id:{userInfo?.UserId},用户{userInfo?.UserTrueName}")
                     + (responseContent.Status ? "token替换成功" : "token替换失败"), null, error);
             }
             return responseContent;
@@ -141,8 +141,8 @@ namespace VOL.System.Services
                 if (string.IsNullOrEmpty(newPwd)) return webResponse.Error("新密码不能为空");
                 if (newPwd.Length < 6) return webResponse.Error("密码不能少于6位");
 
-                int userId = UserContext.Current.UserId;
-                string userCurrentPwd = await base.repository.FindFirstAsync(x => x.User_Id == userId, s => s.UserPwd);
+                Guid userId = UserContext.Current.UserId;
+                string userCurrentPwd = await base.repository.FindFirstAsync(x => x.Id == userId, s => s.UserPwd);
 
                 string _oldPwd = oldPwd.EncryptDES(AppSetting.Secret.User);
                 if (_oldPwd != userCurrentPwd) return webResponse.Error("旧密码不正确");
@@ -151,9 +151,9 @@ namespace VOL.System.Services
                 if (userCurrentPwd == _newPwd) return webResponse.Error("新密码不能与旧密码相同");
 
 
-                repository.Update(new Sys_User
+                repository.Update(new SysUser
                 {
-                    User_Id = userId,
+                    Id = userId,
                     UserPwd = _newPwd,
                     LastModifyPwdDate = DateTime.Now
                 }, x => new { x.UserPwd, x.LastModifyPwdDate }, true);
@@ -185,7 +185,7 @@ namespace VOL.System.Services
         public async Task<WebResponseContent> GetCurrentUserInfo()
         {
             var data = await base.repository
-                .FindAsIQueryable(x => x.User_Id == UserContext.Current.UserId)
+                .FindAsIQueryable(x => x.Id == UserContext.Current.UserId)
                 .Select(s => new
                 {
                     s.UserName,
@@ -208,37 +208,37 @@ namespace VOL.System.Services
         /// </summary>
         /// <param name="pageData"></param>
         /// <returns></returns>
-        public override PageGridData<Sys_User> GetPageData(PageDataOptions pageData)
+        public override PageGridData<SysUser> GetPageData(PageDataOptions pageData)
         {
-            int roleId = -1;
+            Guid roleId = Guid.Empty;
             //树形菜单传查询角色下所有用户
             if (pageData.Value != null)
             {
-                roleId = pageData.Value.ToString().GetInt();
+                roleId = Guid.Parse(pageData.Value.ToString());
             }
-            QueryRelativeExpression = (IQueryable<Sys_User> queryable) =>
+            QueryRelativeExpression = (IQueryable<SysUser> queryable) =>
             {
-                if (roleId <= 0)
+                if (roleId == Guid.Empty)
                 {
                     if (UserContext.Current.IsSuperAdmin) return queryable;
                     roleId = UserContext.Current.RoleId;
                 }
 
                 //查看用户时，只能看下自己角色下的所有用户
-                List<int> roleIds = Sys_RoleService
+                List<Guid> roleIds = SysRoleService
                    .Instance
                    .GetAllChildrenRoleId(roleId);
                 roleIds.Add(roleId);
                 //判断查询的角色是否越权
                 if (roleId != UserContext.Current.RoleId && !roleIds.Contains(roleId))
                 {
-                    roleId = -999;
+                    roleId = Guid.Empty;
                 }
-                return queryable.Where(x => roleIds.Contains(x.Role_Id));
+                return queryable.Where(x => roleIds.Contains(x.RoleId));
             };
             base.OrderByExpression = x => new Dictionary<object, Core.Enums.QueryOrderBy>() {
                 { x.CreateDate, Core.Enums.QueryOrderBy.Desc },
-                { x.User_Id,Core.Enums.QueryOrderBy.Desc}
+                { x.Id,Core.Enums.QueryOrderBy.Desc}
             };
             return base.GetPageData(pageData);
         }
@@ -253,11 +253,12 @@ namespace VOL.System.Services
             WebResponseContent responseData = new WebResponseContent();
             base.AddOnExecute = (SaveModel userModel) =>
             {
-                int roleId = userModel?.MainData?["Role_Id"].GetInt() ?? 0;
-                if (roleId > 0)
+                var rid = userModel?.MainData?["RoleId"].ToString();
+                Guid roleId = string.IsNullOrEmpty(rid) ? Guid.Empty : Guid.Parse(rid);
+                if (roleId != Guid.Empty)
                 {
                     string roleName = GetChildrenName(roleId);
-                    if ((!UserContext.Current.IsSuperAdmin && roleId == 1) || string.IsNullOrEmpty(roleName))
+                    if ((!UserContext.Current.IsSuperAdmin) || string.IsNullOrEmpty(roleName))
                         return responseData.Error("不能选择此角色");
                     //选择新建的角色ID，手动添加角色ID的名称
                     userModel.MainData["RoleName"] = roleName;
@@ -269,7 +270,7 @@ namespace VOL.System.Services
             ///生成6位数随机密码
             string pwd = 6.GenerateRandomNumber();
             //在AddOnExecuting之前已经对提交的数据做过验证是否为空
-            base.AddOnExecuting = (Sys_User user, object obj) =>
+            base.AddOnExecuting = (SysUser user, object obj) =>
             {
                 user.UserName = user.UserName.Trim();
                 if (repository.Exists(x => x.UserName == user.UserName))
@@ -279,7 +280,7 @@ namespace VOL.System.Services
                 return responseData.OK();
             };
 
-            base.AddOnExecuted = (Sys_User user, object list) =>
+            base.AddOnExecuted = (SysUser user, object list) =>
             {
                 return responseData.OK($"用户新建成功.帐号{user.UserName}密码{pwd}");
             };
@@ -297,15 +298,15 @@ namespace VOL.System.Services
         {
             base.DelOnExecuting = (object[] ids) =>
             {
-                int[] userIds = ids.Select(x => Convert.ToInt32(x)).ToArray();
+                Guid[] userIds = ids.Select(x => Guid.Parse(x.ToString())).ToArray();
                 //校验只能删除当前角色下能看到的用户
-                var xxx = repository.Find(x => userIds.Contains(x.User_Id));
-                var delUserIds = repository.Find(x => userIds.Contains(x.User_Id), s => new { s.User_Id, s.Role_Id, s.UserTrueName });
-                List<int> roleIds = Sys_RoleService
+                var xxx = repository.Find(x => userIds.Contains(x.Id));
+                var delUserIds = repository.Find(x => userIds.Contains(x.Id), s => new { s.Id, s.RoleId, s.UserTrueName });
+                List<Guid> roleIds = SysRoleService
                    .Instance
                    .GetAllChildrenRoleId(UserContext.Current.RoleId);
 
-                string[] userNames = delUserIds.Where(x => !roleIds.Contains(x.Role_Id))
+                string[] userNames = delUserIds.Where(x => !roleIds.Contains(x.RoleId))
                  .Select(s => s.UserTrueName)
                  .ToArray();
                 if (userNames.Count() > 0)
@@ -316,19 +317,19 @@ namespace VOL.System.Services
             };
             base.DelOnExecuted = (object[] userIds) =>
             {
-                var objKeys = userIds.Select(x => x.GetInt().GetUserIdKey());
+                var objKeys = userIds.Select(x => Guid.Parse(x.ToString()).GetUserIdKey());
                 base.CacheContext.RemoveAll(objKeys);
                 return new WebResponseContent() { Status = true };
             };
             return base.Del(keys, delList);
         }
 
-        private string GetChildrenName(int roleId)
+        private string GetChildrenName(Guid roleId)
         {
             //只能修改当前角色能看到的用户
-            string roleName = Sys_RoleService
+            string roleName = SysRoleService
                 .Instance
-                .GetAllChildren(UserContext.Current.UserInfo.Role_Id).Where(x => x.Id == roleId)
+                .GetAllChildren(UserContext.Current.UserInfo.RoleId).Where(x => x.Id == roleId)
                 .Select(s => s.RoleName).FirstOrDefault();
             return roleName;
         }
@@ -346,12 +347,13 @@ namespace VOL.System.Services
             //禁止修改用户名
             base.UpdateOnExecute = (SaveModel saveInfo) =>
             {
-                int roleId = saveModel.MainData["Role_Id"].GetInt();
+                var rid = saveModel?.MainData?["RoleId"].ToString();
+                Guid roleId = string.IsNullOrEmpty(rid) ? Guid.Empty : Guid.Parse(rid);
                 string roleName = GetChildrenName(roleId);
                 saveInfo.MainData.TryAdd("RoleName", roleName);
-                if (UserContext.IsRoleIdSuperAdmin(userInfo.Role_Id))
+                if (UserContext.IsRoleIdSuperAdmin(userInfo.RoleId))
                 {
-                    if (userInfo.Role_Id == roleId)
+                    if (userInfo.RoleId == roleId)
                     {
                         saveInfo.MainData["RoleName"] = userInfo.RoleName;
                     }
@@ -361,23 +363,23 @@ namespace VOL.System.Services
 
                 return responseContent.OK();
             };
-            base.UpdateOnExecuting = (Sys_User user, object obj1, object obj2, List<object> list) =>
+            base.UpdateOnExecuting = (SysUser user, object obj1, object obj2, List<object> list) =>
             {
-                if (user.User_Id == userInfo.User_Id && user.Role_Id != userInfo.Role_Id)
+                if (user.Id == userInfo.UserId && user.RoleId != userInfo.RoleId)
                     return responseContent.Error("不能修改自己的角色");
 
-                var _user = repository.Find(x => x.User_Id == user.User_Id,
+                var _user = repository.Find(x => x.Id == user.Id,
                     s => new { s.UserName, s.UserPwd })
                     .FirstOrDefault();
                 user.UserName = _user.UserName;
-                //Sys_User实体的UserPwd用户密码字段的属性不是编辑，此处不会修改密码。但防止代码生成器将密码字段的修改成了可编辑造成密码被修改
+                //SysUser实体的UserPwd用户密码字段的属性不是编辑，此处不会修改密码。但防止代码生成器将密码字段的修改成了可编辑造成密码被修改
                 user.UserPwd = _user.UserPwd;
                 return responseContent.OK();
             };
             //用户信息被修改后，将用户的缓存信息清除
-            base.UpdateOnExecuted = (Sys_User user, object obj1, object obj2, List<object> List) =>
+            base.UpdateOnExecuted = (SysUser user, object obj1, object obj2, List<object> List) =>
             {
-                base.CacheContext.Remove(user.User_Id.GetUserIdKey());
+                base.CacheContext.Remove(user.Id.GetUserIdKey());
                 return new WebResponseContent(true);
             };
             return base.Update(saveModel);
@@ -391,20 +393,20 @@ namespace VOL.System.Services
         public override WebResponseContent Export(PageDataOptions pageData)
         {
             //限定只能导出当前角色能看到的所有用户
-            QueryRelativeExpression = (IQueryable<Sys_User> queryable) =>
+            QueryRelativeExpression = (IQueryable<SysUser> queryable) =>
             {
                 if (UserContext.Current.IsSuperAdmin) return queryable;
-                List<int> roleIds = Sys_RoleService
+                List<Guid> roleIds = SysRoleService
                  .Instance
                  .GetAllChildrenRoleId(UserContext.Current.RoleId);
-                return queryable.Where(x => roleIds.Contains(x.Role_Id) || x.User_Id == UserContext.Current.UserId);
+                return queryable.Where(x => roleIds.Contains(x.RoleId) || x.Id == UserContext.Current.UserId);
             };
 
-            base.ExportOnExecuting = (List<Sys_User> list, List<string> ignoreColumn) =>
+            base.ExportOnExecuting = (List<SysUser> list, List<string> ignoreColumn) =>
             {
-                if (!ignoreColumn.Contains("Role_Id"))
+                if (!ignoreColumn.Contains("RoleId"))
                 {
-                    ignoreColumn.Add("Role_Id");
+                    ignoreColumn.Add("RoleId");
                 }
                 if (!ignoreColumn.Contains("RoleName"))
                 {

@@ -309,7 +309,7 @@ namespace VOL.Core.Utilities
 
             List<PropertyInfo> propertyInfo = null;
 
-            /*导出时，代码生成器中的表配置信息Sys_TableInfo/Sys_TableColumn必须与当前数据库相同，否则导出来可能没有数据*/
+            /*导出时，代码生成器中的表配置信息SysTableInfo/SysTableColumn必须与当前数据库相同，否则导出来可能没有数据*/
 
             //2020.06.02优化读取导出列配置信息
             //导出指定的列
@@ -464,7 +464,7 @@ namespace VOL.Core.Utilities
             // && x.IsReadDataset == 0
             //2020.06.02增加不区分大表名大小写: 可能是表名是小写，但生成model的时候强制大写
             //x => x.TableName.ToLower() == tableName.ToLower()
-            var query = DBServerProvider.DbContext.Set<Sys_TableColumn>().Where(x => x.TableName.ToLower() == tableName.ToLower());
+            var query = DBServerProvider.DbContext.Set<SysTableColumn>().Where(x => x.TableName.ToLower() == tableName.ToLower());
             if (columns != null && columns.Length > 0)
             {
                 query = query.Where(x => columns.Contains(x.ColumnName));
@@ -497,9 +497,9 @@ namespace VOL.Core.Utilities
             foreach (string dicNo in dicNos.Distinct())
             {
                 Dictionary<string, string> keyValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                List<Sys_DictionaryList> dictionaryLists = dictionaries
-                   .Where(x => x.DicNo == dicNo && x.Sys_DictionaryList != null)
-                   .Select(s => s.Sys_DictionaryList).FirstOrDefault();
+                List<SysDictionaryList> dictionaryLists = dictionaries
+                   .Where(x => x.DicNo == dicNo && x.SysDictionaryList != null)
+                   .Select(s => s.SysDictionaryList).FirstOrDefault();
                 if (dictionaryLists == null || dictionaryLists.Count == 0) continue;
                 foreach (var item in dictionaryLists)
                 {

@@ -1,23 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using VOL.Core.Utilities;
 using VOL.Entity.DomainModels;
 
 namespace VOL.System.IServices
 {
-    public partial interface ISys_MenuService
+    public partial interface ISysMenuService
     {
         Task<object> GetMenu();
-        List<Sys_Menu> GetCurrentMenuList();
+        List<SysMenu> GetCurrentMenuList();
 
-        List<Sys_Menu> GetUserMenuList(int roleId);
+        List<SysMenu> GetUserMenuList(Guid roleId);
 
         Task<object> GetCurrentMenuActionList();
 
-        Task<object> GetMenuActionList(int roleId);
-        Task<WebResponseContent> Save(Sys_Menu menu);
+        Task<object> GetMenuActionList(Guid roleId);
+        Task<WebResponseContent> Save(SysMenu menu);
 
-        Task<object> GetTreeItem(int menuId);
+        Task<object> GetTreeItem(Guid menuId);
     }
 }
 

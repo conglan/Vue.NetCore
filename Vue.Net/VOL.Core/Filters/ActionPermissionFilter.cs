@@ -88,7 +88,7 @@ namespace VOL.Core.Filters
             //权限判断角色ID,
             if (ActionPermission.RoleIds != null && ActionPermission.RoleIds.Length > 0)
             {
-                if (ActionPermission.RoleIds.Contains(_userContext.UserInfo.Role_Id)) return ResponseContent.OK();
+                if (ActionPermission.RoleIds.Contains(_userContext.UserInfo.RoleId)) return ResponseContent.OK();
                 //如果角色ID没有权限。并且也没控制器权限
                 if (string.IsNullOrEmpty(ActionPermission.TableAction))
                 {

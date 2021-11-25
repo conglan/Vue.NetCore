@@ -1190,7 +1190,7 @@ let methods = {
     }
     if (keys.length == 0) return;
     let $internalVue = this;
-    this.http.post("/api/Sys_Dictionary/GetVueDictionary", keys).then(dic => {
+    this.http.post("/api/SysDictionary/GetVueDictionary", keys).then(dic => {
       $internalVue.bindOptions(dic);
     });
   },

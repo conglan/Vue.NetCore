@@ -45,7 +45,7 @@ namespace VOL.Core.Infrastructure
         /// <returns></returns>
         public static string GetRolesSql()
         {
-            return $@"SELECT Role_Id as 'key',RoleName as 'value' FROM Sys_Role 
+            return $@"SELECT RoleId as 'key',RoleName as 'value' FROM SysRole 
                            WHERE Enable=1 ";
         }
 
@@ -61,11 +61,11 @@ namespace VOL.Core.Infrastructure
             {
                 return originalSql;
             }
-            int currnetRoleId = UserContext.Current.RoleId;
-            List<int> roleIds = RoleContext.GetAllChildrenIds(currnetRoleId);
+            Guid currnetRoleId = UserContext.Current.RoleId;
+            List<Guid> roleIds = RoleContext.GetAllChildrenIds(currnetRoleId);
             roleIds.Add(currnetRoleId);
-            string sql = $@"SELECT Role_Id as 'key',RoleName as 'value' FROM Sys_Role 
-                           WHERE Enable=1  and Role_Id in ({string.Join(',', roleIds)})";
+            string sql = $@"SELECT RoleId as 'key',RoleName as 'value' FROM SysRole 
+                           WHERE Enable=1  and RoleId in ({string.Join(',', roleIds)})";
             return sql;
         }
     }

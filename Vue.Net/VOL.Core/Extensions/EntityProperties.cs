@@ -623,7 +623,7 @@ namespace VOL.Core.Extensions
 
         /// <summary>
         /// 判断是否包含某个属性：
-        /// 如 [Editable(true)]
+        /// 如 
         //  public string MO { get; set; }包含Editable
         /// </summary>
         /// <param name="propertyInfo"></param>
@@ -1388,7 +1388,7 @@ namespace VOL.Core.Extensions
             {
                 string filed = property.Name.ToLower();
                 if (filed == defaultColumns.UserIdField?.ToLower())
-                    property.SetValue(source, userInfo.User_Id);
+                    property.SetValue(source, userInfo.UserId);
 
                 if (filed == defaultColumns.UserNameField?.ToLower())
                     property.SetValue(source, userInfo.UserTrueName);
@@ -1406,7 +1406,7 @@ namespace VOL.Core.Extensions
 
             if (valuePair.Key != null || defaultColumns.UserIdField != null)
             {
-                dic[valuePair.Key ?? defaultColumns.UserIdField] = userInfo.User_Id;
+                dic[valuePair.Key ?? defaultColumns.UserIdField] = userInfo.UserId;
             }
 
             valuePair = dic.Where(x => x.Key.ToLower() == defaultColumns.UserNameField?.ToLower()).FirstOrDefault();

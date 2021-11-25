@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace VOL.System.IServices
 {
-    public partial interface ISys_UserService
+    public partial interface ISysUserService
     {
 
         Task<WebResponseContent> Login(LoginInfo loginInfo, bool verificationCode = true);

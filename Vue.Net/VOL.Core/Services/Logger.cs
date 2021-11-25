@@ -14,6 +14,7 @@ using VOL.Core.DBManager;
 using VOL.Core.Enums;
 using VOL.Core.Extensions;
 using VOL.Core.ManageUser;
+using VOL.Entity;
 using VOL.Entity.DomainModels;
 
 namespace VOL.Core.Services
@@ -23,7 +24,7 @@ namespace VOL.Core.Services
     /// </summary>
     public static class Logger
     {
-        public static ConcurrentQueue<Sys_Log> loggerQueueData = new ConcurrentQueue<Sys_Log>();
+        public static ConcurrentQueue<SysLog> loggerQueueData = new ConcurrentQueue<SysLog>();
         private static DateTime lastClearFileDT = DateTime.Now.AddDays(-1);
         private static string _loggerPath = AppSetting.DownLoadPath + "Logger\\Queue\\";
         static Logger()
@@ -78,7 +79,7 @@ namespace VOL.Core.Services
         /// <param name="userInfo">用户数据</param>
         private static void Add(LoggerType loggerType, string requestParameter, string responseParameter, string ex, LoggerStatus status)
         {
-            Sys_Log log = null;
+            SysLog log = null;
             try
             {
                 HttpContext context = Utilities.HttpContext.Current;
@@ -89,14 +90,15 @@ namespace VOL.Core.Services
                     WriteText($"未获取到httpcontext信息,type:{loggerType.ToString()},reqParam:{requestParameter},respParam:{responseParameter},ex:{ex},success:{status.ToString()}");
                     return;
                 }
+
                 UserInfo userInfo = UserContext.Current.UserInfo;
-                log = new Sys_Log()
+                log = new SysLog()
                 {
                     BeginDate = cctionObserver.RequestDate,
                     EndDate = DateTime.Now,
-                    User_Id = userInfo.User_Id,
+                    UserId = userInfo.UserId,
                     UserName = userInfo.UserTrueName,
-                    Role_Id = userInfo.Role_Id,
+                    RoleId = userInfo.RoleId,
                     LogType = loggerType.ToString(),
                     ExceptionInfo = ex,
                     RequestParameter = requestParameter,
@@ -107,7 +109,7 @@ namespace VOL.Core.Services
             }
             catch (Exception exception)
             {
-                log = log ?? new Sys_Log()
+                log = log ?? new SysLog()
                 {
                     BeginDate = DateTime.Now,
                     EndDate = DateTime.Now,
@@ -136,7 +138,7 @@ namespace VOL.Core.Services
                     Thread.Sleep(5000);
                     if (queueTable.Rows.Count == 0) { continue; }
 
-                    DBServerProvider.SqlDapper.BulkInsert(queueTable, "Sys_Log", SqlBulkCopyOptions.KeepIdentity, null, _loggerPath);
+                    DBServerProvider.SqlDapper.BulkInsert(queueTable, "SysLog", SqlBulkCopyOptions.KeepIdentity, null, _loggerPath);
 
                     queueTable.Clear();
 
@@ -171,13 +173,12 @@ namespace VOL.Core.Services
 
         private static void DequeueToTable(DataTable queueTable)
         {
-            loggerQueueData.TryDequeue(out Sys_Log log);
+            loggerQueueData.TryDequeue(out SysLog log);
             DataRow row = queueTable.NewRow();
             if (log.BeginDate == null)
             {
                 log.BeginDate = DateTime.Now;
             }
-            //  row["Id"] = log.Id;
             row["LogType"] = log.LogType;
             row["RequestParameter"] = log.RequestParameter;
             row["ResponseParameter"] = log.ResponseParameter;
@@ -190,9 +191,9 @@ namespace VOL.Core.Services
             row["ServiceIP"] = log.ServiceIP;
             row["BrowserType"] = log.BrowserType;
             row["Url"] = log.Url;
-            row["User_Id"] = log.User_Id ?? -1;
+            row["UserId"] = log.UserId ?? Guid.Empty;
             row["UserName"] = log.UserName;
-            row["Role_Id"] = log.Role_Id ?? -1;
+            row["RoleId"] = log.RoleId ?? Guid.Empty;
             queueTable.Rows.Add(row);
         }
         private static DataTable CreateEmptyTable()
@@ -210,13 +211,13 @@ namespace VOL.Core.Services
             queueTable.Columns.Add("ServiceIP", typeof(string));
             queueTable.Columns.Add("BrowserType", typeof(string));
             queueTable.Columns.Add("Url", typeof(string));
-            queueTable.Columns.Add("User_Id", Type.GetType("System.Int32"));
+            queueTable.Columns.Add("UserId", Type.GetType("System.Guid"));
             queueTable.Columns.Add("UserName", typeof(string));
-            queueTable.Columns.Add("Role_Id", Type.GetType("System.Int32"));
+            queueTable.Columns.Add("RoleId", Type.GetType("System.Guid"));
             return queueTable;
         }
 
-        public static void SetServicesInfo(Sys_Log log, HttpContext context)
+        public static void SetServicesInfo(SysLog log, HttpContext context)
         {
             string result = String.Empty;
             log.Url = context.Request.Scheme + "://" + context.Request.Host + context.Request.PathBase +

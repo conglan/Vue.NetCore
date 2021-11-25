@@ -29,9 +29,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="IRepositories\News\" />
-    <Folder Include="IServices\News\" />
-    <Folder Include="Services\News\Partial\" />
+    <Folder Include="IRepositories\" />
+    <Folder Include="IServices\" />
+    <Folder Include="Repositories\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

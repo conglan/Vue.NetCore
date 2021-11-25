@@ -10,12 +10,12 @@ namespace VOL.Core.Extensions
             return prefix.ToString() + value;
         }
 
-        public static string GetUserIdKey(this int userId)
+        public static string GetUserIdKey(this Guid userId)
         {
             return CPrefix.UID.ToString() + userId;
         }
 
-        public static string GetRoleIdKey(this int roleId)
+        public static string GetRoleIdKey(this Guid roleId)
         {
             return CPrefix.Role.ToString() + roleId;
         }

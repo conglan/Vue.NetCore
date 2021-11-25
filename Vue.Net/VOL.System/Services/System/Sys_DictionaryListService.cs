@@ -12,16 +12,16 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.Services
 {
-    public partial class Sys_DictionaryListService : ServiceBase<Sys_DictionaryList, ISys_DictionaryListRepository>, ISys_DictionaryListService, IDependency
+    public partial class SysDictionaryListService : ServiceBase<SysDictionaryList, ISysDictionaryListRepository>, ISysDictionaryListService, IDependency
     {
-        public Sys_DictionaryListService(ISys_DictionaryListRepository repository)
+        public SysDictionaryListService(ISysDictionaryListRepository repository)
              : base(repository) 
         { 
            Init(repository);
         }
-        public static ISys_DictionaryListService Instance
+        public static ISysDictionaryListService Instance
         {
-           get { return AutofacContainerModule.GetService<ISys_DictionaryListService>(); }
+           get { return AutofacContainerModule.GetService<ISysDictionaryListService>(); }
         }
     }
 }

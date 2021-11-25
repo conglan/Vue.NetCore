@@ -77,7 +77,7 @@ export default {
   components: { VolUpload },
   data() {
     return {
-      url: "/api/Sys_Dictionary/Upload",
+      url: "/api/SysDictionary/Upload",
       model: true,
       fileInfo: [
         {
@@ -122,7 +122,7 @@ export default {
       if (!this.base.checkUrl(file.path)) {
         this.dowloadFile(
           this.http.ipAddress +
-            "api/Sys_Dictionary/DownLoadFile?path=" +
+            "api/SysDictionary/DownLoadFile?path=" +
             file.path +
             file.name,
           file.name,

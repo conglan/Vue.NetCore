@@ -287,7 +287,7 @@ export default {
             multiple: true,
             maxFile: 2,
             maxSize: 5,
-            url: "api/Sys_Dictionary/Upload",
+            url: "api/SysDictionary/Upload",
             //  colSize: 6, //设置宽度50%
           },
           {
@@ -298,7 +298,7 @@ export default {
             multiple: true,
             maxFile: 5,
             maxSize: 3,
-            url: "api/Sys_Dictionary/Upload",
+            url: "api/SysDictionary/Upload",
             // colSize: 6, //设置宽度50%
           },
         ],

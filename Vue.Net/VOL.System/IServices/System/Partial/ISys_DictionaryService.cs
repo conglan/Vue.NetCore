@@ -5,7 +5,7 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.IServices
 {
-    public partial interface ISys_DictionaryService
+    public partial interface ISysDictionaryService
     {
         /// <summary>
         /// 代码生成器获取所有字典项(超级管理权限)

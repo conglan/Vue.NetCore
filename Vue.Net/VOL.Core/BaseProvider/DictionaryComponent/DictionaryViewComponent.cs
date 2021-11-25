@@ -29,9 +29,9 @@ namespace VOL.Core.BaseProvider.DictionaryComponent
             string[] dicNos = dropDownIds.Split(',');
             StringBuilder stringBuilder = new StringBuilder();
             VOLContext context = DBServerProvider.GetEFDbContext();
-            var dicData =await (from d in context.Set<Sys_Dictionary>()
-                           join list in context.Set<Sys_DictionaryList>()
-                           on d.Dic_ID equals list.Dic_ID
+            var dicData =await (from d in context.Set<SysDictionary>()
+                           join list in context.Set<SysDictionaryList>()
+                           on d.Id equals list.DicId
                            into t
                            from list in t.DefaultIfEmpty()
                            where dicNos.Contains(d.DicNo)

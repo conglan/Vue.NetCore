@@ -13,7 +13,7 @@ namespace VOL.Core.Filters
         /// 限定角色访问
         /// </summary>
         /// <param name="roles"></param>
-        public ApiActionPermissionAttribute(int roleId)
+        public ApiActionPermissionAttribute(Guid roleId)
        : base(roleId, true)
         {
         }

@@ -11,12 +11,12 @@ using VOL.System.IServices;
 
 namespace VOL.System.Controllers
 {
-    [Route("api/Sys_Role")]
-    [PermissionTable(Name = "Sys_Role")]
-    public partial class Sys_RoleController : ApiBaseController<ISys_RoleService>
+    [Route("api/SysRole")]
+    [PermissionTable(Name = "SysRole")]
+    public partial class SysRoleController : ApiBaseController<ISysRoleService>
     {
-        public Sys_RoleController(ISys_RoleService service)
-        : base("System", "System", "Sys_Role", service)
+        public SysRoleController(ISysRoleService service)
+        : base("System", "System", "SysRole", service)
         {
 
         }

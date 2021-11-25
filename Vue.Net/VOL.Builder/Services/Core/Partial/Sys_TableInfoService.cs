@@ -14,13 +14,13 @@ using VOL.Builder.Utility;
 using VOL.Core.Extensions;
 using VOL.Core.ManageUser;
 using VOL.Core.Utilities;
+using VOL.Entity;
 using VOL.Entity.DomainModels;
 using VOL.Entity.DomainModels.Sys;
-using VOL.Entity.SystemModels;
 
 namespace VOL.Builder.Services
 {
-    public partial class Sys_TableInfoService
+    public partial class SysTableInfoService
     {
         private int totalWidth = 0;
         private int totalCol = 0;
@@ -79,7 +79,7 @@ namespace VOL.Builder.Services
             var treeData = await repository.FindAsIQueryable(x => 1 == 1)
                 .Select(c => new
                 {
-                    id = c.Table_Id,
+                    id = c.Id,
                     pId = c.ParentId,
                     parentId = c.ParentId,
                     name = c.ColumnCNName,
@@ -168,7 +168,7 @@ namespace VOL.Builder.Services
         /// </summary>
         /// <param name="sysTableInfo"></param>
         /// <returns></returns>
-        public string CreateEntityModel(Sys_TableInfo sysTableInfo)
+        public string CreateEntityModel(SysTableInfo sysTableInfo)
         {
             if (sysTableInfo == null
                 || sysTableInfo.TableColumns == null
@@ -192,7 +192,7 @@ namespace VOL.Builder.Services
 
             string sql = GetSqlServerModelInfo();
             List<TableColumnInfo> tableColumnInfoList = repository.DapperContext.QueryList<TableColumnInfo>(sql, new { tableName });
-            List<Sys_TableColumn> list = sysTableInfo.TableColumns;
+            List<SysTableColumn> list = sysTableInfo.TableColumns;
             string msg = CreateEntityModel(list, sysTableInfo, tableColumnInfoList, 1);
             if (msg != "")
                 return msg;
@@ -212,12 +212,12 @@ namespace VOL.Builder.Services
         /// </summary>
         /// <param name="sysTableInfo"></param>
         /// <returns></returns>
-        public WebResponseContent SaveEidt(Sys_TableInfo sysTableInfo)
+        public WebResponseContent SaveEidt(SysTableInfo sysTableInfo)
         {
             WebResponseContent webResponse = ValidColumnString(sysTableInfo);
             if (!webResponse.Status) return webResponse;
             //2020.05.07新增禁止选择上级角色为自己
-            if (sysTableInfo.Table_Id == sysTableInfo.ParentId)
+            if (sysTableInfo.Id == sysTableInfo.ParentId)
             {
                 return WebResponseContent.Instance.Error($"父级id不能为自己");
             }
@@ -240,7 +240,7 @@ namespace VOL.Builder.Services
                     x.IsReadDataset = 0;
                 }
             });
-            return repository.UpdateRange<Sys_TableColumn>(sysTableInfo, true, true, null, null, true);
+            return repository.UpdateRange<SysTableColumn>(sysTableInfo, true, true, null, null, true);
         }
 
         /// <summary>
@@ -263,7 +263,7 @@ namespace VOL.Builder.Services
             WebResponseContent webResponse = new WebResponseContent();
             if (string.IsNullOrEmpty(tableName)) return webResponse.OK("表名不能为空");
 
-            Sys_TableInfo tableInfo = repository.FindAsIQueryable(x => x.TableName == tableName)
+            SysTableInfo tableInfo = repository.FindAsIQueryable(x => x.TableName == tableName)
           .Include(o => o.TableColumns).FirstOrDefault();
             if (tableInfo == null)
                 return webResponse.Error("未获取到【" + tableName + "】的配置信息，请使用新建功能");
@@ -275,24 +275,24 @@ namespace VOL.Builder.Services
             string sql = GetCurrentSql(tableName);
 
             //获取表结构
-            List<Sys_TableColumn> columns = repository.DapperContext
-                  .QueryList<Sys_TableColumn>(sql, new { tableName });
+            List<SysTableColumn> columns = repository.DapperContext
+                  .QueryList<SysTableColumn>(sql, new { tableName });
             if (columns == null || columns.Count == 0)
                 return webResponse.Error("未获取到【" + tableName + "】表结构信息，请确认表是否存在");
 
             //获取现在配置好的表结构
-            List<Sys_TableColumn> detailList = tableInfo.TableColumns ?? new List<Sys_TableColumn>();
-            List<Sys_TableColumn> addColumns = new List<Sys_TableColumn>();
-            List<Sys_TableColumn> updateColumns = new List<Sys_TableColumn>();
-            foreach (Sys_TableColumn item in columns)
+            List<SysTableColumn> detailList = tableInfo.TableColumns ?? new List<SysTableColumn>();
+            List<SysTableColumn> addColumns = new List<SysTableColumn>();
+            List<SysTableColumn> updateColumns = new List<SysTableColumn>();
+            foreach (SysTableColumn item in columns)
             {
-                Sys_TableColumn tableColumn = detailList.Where(x => x.ColumnName == item.ColumnName)
+                SysTableColumn tableColumn = detailList.Where(x => x.ColumnName == item.ColumnName)
                     .FirstOrDefault();
                 //新加的列
                 if (tableColumn == null)
                 {
                     item.TableName = tableInfo.TableName;
-                    item.Table_Id = tableInfo.Table_Id;
+                    item.TableId = tableInfo.Id;
                     addColumns.Add(item);
                     continue;
                 }
@@ -306,13 +306,13 @@ namespace VOL.Builder.Services
                 }
             }
             //删除的列
-            List<Sys_TableColumn> delColumns = detailList.Where(a => !columns.Select(c => c.ColumnName).Contains(a.ColumnName)).ToList();
+            List<SysTableColumn> delColumns = detailList.Where(a => !columns.Select(c => c.ColumnName).Contains(a.ColumnName)).ToList();
             if (addColumns.Count + delColumns.Count + updateColumns.Count == 0)
             {
                 return webResponse.Error("【" + tableName + "】表结构未发生变化");
             }
             repository.AddRange(addColumns);
-            repository.DbContext.Set<Sys_TableColumn>().RemoveRange(delColumns);
+            repository.DbContext.Set<SysTableColumn>().RemoveRange(delColumns);
             repository.UpdateRange(updateColumns, x => new { x.ColumnType, x.Maxlength, x.IsNull });
             await repository.DbContext.SaveChangesAsync();
 
@@ -330,7 +330,7 @@ namespace VOL.Builder.Services
         /// <returns></returns>
         public string CreateServices(string tableName, string nameSpace, string foldername, bool webController, bool apiController)
         {
-            var tableColumn = repository.FindAsyncFirst<Sys_TableColumn>(x => x.TableName == tableName).Result;
+            var tableColumn = repository.FindAsyncFirst<SysTableColumn>(x => x.TableName == tableName).Result;
 
             if (tableColumn == null)
             {
@@ -438,7 +438,7 @@ namespace VOL.Builder.Services
         /// <param name="vue"></param>
         /// <param name="edit"></param>
         /// <returns></returns>
-        private List<object> GetSearchData(List<List<PanelHtml>> panelHtml, List<Sys_TableColumn> sysColumnList, bool vue = false, bool edit = false)
+        private List<object> GetSearchData(List<List<PanelHtml>> panelHtml, List<SysTableColumn> sysColumnList, bool vue = false, bool edit = false)
         {
             if (edit)
             {
@@ -517,7 +517,7 @@ namespace VOL.Builder.Services
         /// <param name="sysTableInfo"></param>
         /// <param name="vuePath">为本地Vue项目Views所在的绝对路径:E:/web/myProject/Views</param>
         /// <returns></returns>
-        public string CreateVuePage(Sys_TableInfo sysTableInfo, string vuePath)
+        public string CreateVuePage(SysTableInfo sysTableInfo, string vuePath)
         {
             if (string.IsNullOrEmpty(vuePath)) return "请设置Vue所在Views的绝对路径!";
 
@@ -530,7 +530,7 @@ namespace VOL.Builder.Services
 
             vuePath = vuePath.Trim().TrimEnd('/').TrimEnd('\\');
 
-            List<Sys_TableColumn> sysColumnList = sysTableInfo.TableColumns;
+            List<SysTableColumn> sysColumnList = sysTableInfo.TableColumns;
             string[] eidtTye = new string[] { "select", "selectList", "drop", "dropList", "checkbox" };
             if (sysColumnList.Exists(x => eidtTye.Contains(x.EditType) && string.IsNullOrEmpty(x.DropNo)))
             {
@@ -605,7 +605,7 @@ namespace VOL.Builder.Services
             //如果有明细，加载明细的数据
             if (!string.IsNullOrEmpty(sysTableInfo.DetailName))
             {
-                Sys_TableInfo detailTable = repository.FindAsIQueryable(x => x.TableName == sysTableInfo.DetailName)
+                SysTableInfo detailTable = repository.FindAsIQueryable(x => x.TableName == sysTableInfo.DetailName)
                     .Include(x => x.TableColumns).FirstOrDefault();
                 if (detailTable == null)
                     return $"请先生成明细表{ sysTableInfo.DetailName}的配置!";
@@ -617,7 +617,7 @@ namespace VOL.Builder.Services
                     return $"明细表【{_name}】字段【table显示类型】设置为了【文件或图片】,编辑行只能设置为0或不设置";
                 }
                 //明细列数据
-                List<Sys_TableColumn> detailList = detailTable.TableColumns;
+                List<SysTableColumn> detailList = detailTable.TableColumns;
                 //替换明细列数据
                 sb = GetGridColumns(detailList, detailTable.ExpressField, true, true);
                 key = detailList.Where(c => c.IsKey == 1).Select(x => x.ColumnName).First();
@@ -683,9 +683,9 @@ namespace VOL.Builder.Services
         /// <param name="sysColumnList"></param>
         /// <param name="sysTableInfo"></param>
         /// <returns></returns>
-        public string CreatePage(Sys_TableInfo sysTableInfo)
+        public string CreatePage(SysTableInfo sysTableInfo)
         {
-            List<Sys_TableColumn> sysColumnList = sysTableInfo.TableColumns;
+            List<SysTableColumn> sysColumnList = sysTableInfo.TableColumns;
             List<List<PanelHtml>> panelHtml = new List<List<PanelHtml>>();
             List<object> list = GetSearchData(panelHtml, sysColumnList);
             string nameSpace = sysTableInfo.Namespace;
@@ -790,13 +790,12 @@ namespace VOL.Builder.Services
             //如果有明细，加载明细的数据
             if (!string.IsNullOrEmpty(sysTableInfo.DetailName))
             {
-                Sys_TableInfo detailTable = repository.Find(x => x.TableName == sysTableInfo.DetailName).FirstOrDefault();
+                SysTableInfo detailTable = repository.Find(x => x.TableName == sysTableInfo.DetailName).FirstOrDefault();
                 if (detailTable == null)
                     return $"请先生成明细表{ sysTableInfo.DetailName}的配置!";
 
-                //  repository.DbContext.Set<Sys_TableColumn>().Select();
                 //获取明细列数据
-                List<Sys_TableColumn> detailList = repository.Find<Sys_TableColumn>(x => x.TableName == sysTableInfo.DetailName);
+                List<SysTableColumn> detailList = repository.Find<SysTableColumn>(x => x.TableName == sysTableInfo.DetailName);
                 if (detailList.Exists(c => !string.IsNullOrEmpty(c.DropNo)))
                 {
                     dropNos.AddRange(detailList.Where(x => !string.IsNullOrEmpty(x.DropNo)).Select(x => x.DropNo).Distinct().ToList());
@@ -957,7 +956,7 @@ namespace VOL.Builder.Services
         /// 设置界面table td单元格的宽度
         /// </summary>
         /// <param name="columns"></param>
-        private void SetMaxLength(List<Sys_TableColumn> columns)
+        private void SetMaxLength(List<SysTableColumn> columns)
         {
             columns.ForEach(x =>
             {
@@ -1003,16 +1002,16 @@ namespace VOL.Builder.Services
         /// <param name="tableId"></param>
         /// <param name="isTreeLoad"></param>
         /// <returns></returns>
-        private int InitTable(int parentId, string tableName, string columnCNName, string nameSpace, string foldername, int tableId, bool isTreeLoad)
+        private Guid InitTable(Guid parentId, string tableName, string columnCNName, string nameSpace, string foldername, Guid tableId, bool isTreeLoad)
         {
             if (isTreeLoad)
                 return tableId;
             if (string.IsNullOrEmpty(tableName))
-                return -1;
-            tableId = repository.Find(x => x.TableName == tableName, s => s.Table_Id).FirstOrDefault();
-            if (tableId > 0)
+                return Guid.Empty;
+            tableId = repository.Find(x => x.TableName == tableName, s => s.Id).FirstOrDefault();
+            if (tableId != Guid.Empty)
                 return tableId;
-            Sys_TableInfo tableInfo = new Sys_TableInfo()
+            SysTableInfo tableInfo = new SysTableInfo()
             {
                 ParentId = parentId,
                 ColumnCNName = columnCNName,
@@ -1020,10 +1019,10 @@ namespace VOL.Builder.Services
                 TableName = tableName,
                 Namespace = nameSpace,
                 FolderName = foldername,
-                Enable = 1
+                Enable = Entity.EnableEnum.启用
             };
-            List<Sys_TableColumn> columns = repository.DapperContext
-                .QueryList<Sys_TableColumn>(GetCurrentSql(tableName), new { tableName });
+            List<SysTableColumn> columns = repository.DapperContext
+                .QueryList<SysTableColumn>(GetCurrentSql(tableName), new { tableName });
 
             int orderNo = (columns.Count + 10) * 50;
             for (int i = 0; i < columns.Count; i++)
@@ -1033,8 +1032,8 @@ namespace VOL.Builder.Services
             }
 
             SetMaxLength(columns);
-            base.Add<Sys_TableColumn>(tableInfo, columns, false);
-            return tableInfo.Table_Id;
+            base.Add<SysTableColumn>(tableInfo, columns, false);
+            return tableInfo.Id;
         }
 
         /// <summary>
@@ -1048,15 +1047,15 @@ namespace VOL.Builder.Services
         /// <param name="tableId"></param>
         /// <param name="isTreeLoad">true只加载表数据</param>
         /// <returns></returns>
-        public object LoadTable(int parentId, string tableName, string columnCNName, string nameSpace, string foldername, int tableId, bool isTreeLoad)
+        public object LoadTable(Guid parentId, string tableName, string columnCNName, string nameSpace, string foldername, Guid tableId, bool isTreeLoad)
         {
             if (!UserContext.Current.IsSuperAdmin && !isTreeLoad)
             {
                 return new WebResponseContent().Error("只有超级管理员才能进行此操作");
             }
             tableId = InitTable(parentId, tableName?.Trim(), columnCNName, nameSpace, foldername, tableId, isTreeLoad);
-            Sys_TableInfo tableInfo = repository
-                .FindAsIQueryable(x => x.Table_Id == tableId)
+            SysTableInfo tableInfo = repository
+                .FindAsIQueryable(x => x.Id == tableId)
                 .Include(c => c.TableColumns)
                 .FirstOrDefault();
             if (tableInfo.TableColumns != null)
@@ -1066,10 +1065,10 @@ namespace VOL.Builder.Services
             return new WebResponseContent().OK(null, tableInfo);
         }
 
-        public async Task<WebResponseContent> DelTree(int table_Id)
+        public async Task<WebResponseContent> DelTree(Guid table_Id)
         {
-            if (table_Id == 0) return new WebResponseContent().Error("没有传入参数");
-            Sys_TableInfo tableInfo = await repository.FindAsIQueryable(x => x.Table_Id == table_Id)
+            if (table_Id == Guid.Empty) return new WebResponseContent().Error("没有传入参数");
+            SysTableInfo tableInfo = await repository.FindAsIQueryable(x => x.Id == table_Id)
                 .Include(c => c.TableColumns)
                 .FirstOrDefaultAsync();
             if (tableInfo == null) return new WebResponseContent().OK();
@@ -1093,14 +1092,14 @@ namespace VOL.Builder.Services
         /// <param name="detail"></param>
         /// <param name="vue"></param>
         /// <returns></returns>
-        private StringBuilder GetGridColumns(List<Sys_TableColumn> list, string expressField, bool detail, bool vue = false)
+        private StringBuilder GetGridColumns(List<SysTableColumn> list, string expressField, bool detail, bool vue = false)
         {
             totalCol = 0;
             totalWidth = 0;
             StringBuilder sb = new StringBuilder();
 
             bool sort = false;
-            foreach (Sys_TableColumn item in list.OrderByDescending(x => x.OrderNo))
+            foreach (SysTableColumn item in list.OrderByDescending(x => x.OrderNo))
             {
                 if (item.IsColumnData == 0) { continue; }
                 sb.Append("{field:'" + item.ColumnName + "',");
@@ -1252,7 +1251,7 @@ namespace VOL.Builder.Services
         /// <param name="sysColumn"></param>
         /// <param name="tableInfo"></param>
         /// <param name="createType">1、创建实体类,2创建apiinput类,3、创建apioutput类</param>
-        private string CreateEntityModel(List<Sys_TableColumn> sysColumn, Sys_TableInfo tableInfo, List<TableColumnInfo> tableColumnInfoList, int createType)
+        private string CreateEntityModel(List<SysTableColumn> sysColumn, SysTableInfo tableInfo, List<TableColumnInfo> tableColumnInfoList, int createType)
         {
             string template = "";
             if (createType == 1)
@@ -1272,7 +1271,7 @@ namespace VOL.Builder.Services
             StringBuilder AttributeBuilder = new StringBuilder();
             sysColumn = sysColumn.OrderByDescending(c => c.OrderNo).ToList();
             bool addIgnore = false;
-            foreach (Sys_TableColumn column in sysColumn)
+            foreach (SysTableColumn column in sysColumn)
             {
                 column.ColumnType = (column.ColumnType ?? "").Trim();
                 AttributeBuilder.Append("/// <summary>");
@@ -1357,7 +1356,7 @@ namespace VOL.Builder.Services
 
                 if (column.EditRowNo != null)
                 {
-                    AttributeBuilder.Append("       [Editable(true)]");
+                    AttributeBuilder.Append("       ");
                     AttributeBuilder.Append("\r\n");
                 }
                 // && column.ColumnType.ToLower() == "string"
@@ -1544,7 +1543,7 @@ namespace VOL.Builder.Services
         /// <param name="search"></param>
         /// <param name="orderBy"></param>
         /// <param name="vue"></param>
-        private void GetPanelData(List<Sys_TableColumn> list, List<List<PanelHtml>> panelHtml, Func<Sys_TableColumn, int?> keySelector, Func<Sys_TableColumn, bool> predicate, bool search, Func<Sys_TableColumn, int?> orderBy, bool vue = false)
+        private void GetPanelData(List<SysTableColumn> list, List<List<PanelHtml>> panelHtml, Func<SysTableColumn, int?> keySelector, Func<SysTableColumn, bool> predicate, bool search, Func<SysTableColumn, int?> orderBy, bool vue = false)
         {
             var whereReslut = list.Where(predicate).OrderBy(orderBy).ThenByDescending(c => c.OrderNo).ToList();
             foreach (var item in whereReslut.GroupBy(keySelector))
@@ -1564,14 +1563,14 @@ namespace VOL.Builder.Services
             }
         }
 
-        private WebResponseContent ValidColumnString(Sys_TableInfo tableInfo)
+        private WebResponseContent ValidColumnString(SysTableInfo tableInfo)
         {
             WebResponseContent webResponse = new WebResponseContent(true);
             if (tableInfo.TableColumns == null || tableInfo.TableColumns.Count == 0) return webResponse;
 
             if (!string.IsNullOrEmpty(tableInfo.DetailName))
             {
-                Sys_TableColumn mainTableColumn = tableInfo.TableColumns
+                SysTableColumn mainTableColumn = tableInfo.TableColumns
                      .Where(x => x.IsKey == 1)
                      // .Select(s => s.ColumnName)
                      .FirstOrDefault();
@@ -1581,8 +1580,8 @@ namespace VOL.Builder.Services
                 string key = mainTableColumn.ColumnName;
 
                 //明细表外键列的配置信息
-                Sys_TableColumn tableColumn = repository
-                    .Find<Sys_TableColumn>(x => x.TableName == tableInfo.DetailName && x.ColumnName == key)
+                SysTableColumn tableColumn = repository
+                    .Find<SysTableColumn>(x => x.TableName == tableInfo.DetailName && x.ColumnName == key)
                     ?.FirstOrDefault();
 
                 if (tableColumn == null)

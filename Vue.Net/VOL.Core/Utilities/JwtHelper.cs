@@ -23,9 +23,7 @@ namespace VOL.Core.Utilities
             string exp = $"{new DateTimeOffset(DateTime.Now.AddMinutes(AppSetting.ExpMinutes)).ToUnixTimeSeconds()}";
             var claims = new List<Claim>
                 {
-                //new Claim(ClaimTypes.Name,userInfo.UserName ),
-                //new Claim(ClaimTypes.Role,userInfo.Role_Id ),
-                new Claim(JwtRegisteredClaimNames.Jti,userInfo.User_Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti,userInfo.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, $"{new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds()}"),
                 new Claim(JwtRegisteredClaimNames.Nbf,$"{new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds()}") ,
                 //JWT过期时间
@@ -55,10 +53,16 @@ namespace VOL.Core.Utilities
         {
             var jwtHandler = new JwtSecurityTokenHandler();
             JwtSecurityToken jwtToken = jwtHandler.ReadJwtToken(jwtStr);
+            var roleId = Guid.Empty;
+            var role = jwtToken.Payload[ClaimTypes.Role].ToString();
+            if (!string.IsNullOrEmpty(role))
+            {
+                roleId = Guid.Parse(role);
+            }
             UserInfo userInfo = new UserInfo
             {
-                User_Id = Convert.ToInt32(jwtToken.Id),
-                Role_Id = (jwtToken.Payload[ClaimTypes.Role] ?? 0).GetInt(),
+                UserId = Guid.Parse(jwtToken.Id),
+                RoleId = roleId,
                 UserName = jwtToken.Payload[ClaimTypes.Name]?.ToString()
             };
             return userInfo;

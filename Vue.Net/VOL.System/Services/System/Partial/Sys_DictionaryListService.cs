@@ -8,16 +8,16 @@ using VOL.Core.Enums;
 
 namespace VOL.System.Services
 {
-    public partial class Sys_DictionaryListService
+    public partial class SysDictionaryListService
     {
 
-        public override PageGridData<Sys_DictionaryList> GetPageData(PageDataOptions pageData)
+        public override PageGridData<SysDictionaryList> GetPageData(PageDataOptions pageData)
         {
             base.OrderByExpression = x => new Dictionary<object, QueryOrderBy>() { {
                     x.OrderNo,QueryOrderBy.Desc
                 },
                 {
-                    x.DicList_ID,QueryOrderBy.Asc
+                    x.Id,QueryOrderBy.Asc
                 }
             };
             return base.GetPageData(pageData);

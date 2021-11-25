@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyModel;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -8,20 +7,22 @@ using System.Runtime.Loader;
 using VOL.Core.DBManager;
 using VOL.Core.Extensions;
 using VOL.Core.Extensions.AutofacManager;
-using VOL.Entity.SystemModels;
+using VOL.Entity;
 
 namespace VOL.Core.EFDbContext
 {
     public class VOLContext : DbContext, IDependency
     {
         /// <summary>
-        /// 数据库连接名称 
+        /// 数据库连接名称
         /// </summary>
         public string DataBaseName = null;
+
         public VOLContext()
                 : base()
         {
         }
+
         public VOLContext(string connction)
             : base()
         {
@@ -31,27 +32,30 @@ namespace VOL.Core.EFDbContext
         public VOLContext(DbContextOptions<VOLContext> options)
             : base(options)
         {
-
         }
+
         public override void Dispose()
         {
             base.Dispose();
         }
+
         public override int SaveChanges()
         {
             try
             {
                 return base.SaveChanges();
             }
-            catch (Exception ex)//DbUpdateException 
+            catch (Exception ex)//DbUpdateException
             {
                 throw (ex.InnerException as Exception ?? ex);
             }
         }
+
         public override DbSet<TEntity> Set<TEntity>()
         {
             return base.Set<TEntity>();
         }
+
         //public DbSet<TEntity> Set<TEntity>(bool trackAll = false) where TEntity : class
         //{
         //    return base.Set<TEntity>();
@@ -77,6 +81,7 @@ namespace VOL.Core.EFDbContext
             optionsBuilder = optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             base.OnConfiguring(optionsBuilder);
         }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             Type type = null;
@@ -99,7 +104,7 @@ namespace VOL.Core.EFDbContext
                         .ToList().ForEach(t =>
                         {
                             modelBuilder.Entity(t);
-                          //  modelBuilder.Model.AddEntityType(t);
+                            //  modelBuilder.Model.AddEntityType(t);
                         });
                 }
                 //modelBuilder.AddEntityConfigurationsFromAssembly(GetType().Assembly);
@@ -112,7 +117,6 @@ namespace VOL.Core.EFDbContext
                     $"syslog_{DateTime.Now.ToString("yyyyMMddHHmmss")}.txt",
                     type?.Name + "--------" + ex.Message + ex.StackTrace + ex.Source);
             }
-
         }
     }
 }

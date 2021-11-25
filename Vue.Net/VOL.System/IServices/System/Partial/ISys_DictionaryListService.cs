@@ -3,7 +3,7 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.IServices
 {
-    public partial interface ISys_DictionaryListService
+    public partial interface ISysDictionaryListService
     {
     }
  }

@@ -6,16 +6,16 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.Repositories
 {
-    public partial class Sys_MenuRepository : RepositoryBase<Sys_Menu>, ISys_MenuRepository
+    public partial class SysMenuRepository : RepositoryBase<SysMenu>, ISysMenuRepository
     {
-        public Sys_MenuRepository(VOLContext dbContext)
+        public SysMenuRepository(VOLContext dbContext)
         : base(dbContext)
         {
 
         }
-        public static ISys_MenuRepository Instance
+        public static ISysMenuRepository Instance
         {
-            get { return AutofacContainerModule.GetService<ISys_MenuRepository>(); }
+            get { return AutofacContainerModule.GetService<ISysMenuRepository>(); }
         }
     }
 }

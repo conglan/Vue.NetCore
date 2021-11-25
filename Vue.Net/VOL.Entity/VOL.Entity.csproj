@@ -26,9 +26,8 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DomainModels\ApiEntity\OutPut\" />
-    <Folder Include="DomainModels\News\" />
     <Folder Include="System\" />
+    <Folder Include="Model\" />
   </ItemGroup>
 
 </Project>

@@ -3,25 +3,26 @@ using VOL.Entity.DomainModels;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VOL.Core.Utilities;
+using System;
 
 namespace VOL.Builder.IServices
 {
-    public partial interface ISys_TableInfoService
+    public partial interface ISysTableInfoService
     {
         Task<(string, string)> GetTableTree();
 
-        string CreateEntityModel(Sys_TableInfo tableInfo);
+        string CreateEntityModel(SysTableInfo tableInfo);
 
-        WebResponseContent SaveEidt(Sys_TableInfo sysTableInfo);
+        WebResponseContent SaveEidt(SysTableInfo sysTableInfo);
 
         string CreateServices(string tableName, string nameSpace, string foldername, bool webController, bool apiController);
 
-        string CreatePage(Sys_TableInfo sysTableInfo);
+        string CreatePage(SysTableInfo sysTableInfo);
 
-        string CreateVuePage(Sys_TableInfo sysTableInfo, string vuePath);
+        string CreateVuePage(SysTableInfo sysTableInfo, string vuePath);
 
-        object LoadTable(int parentId, string tableName, string columnCNName, string nameSpace, string foldername, int table_Id, bool isTreeLoad);
+        object LoadTable(Guid parentId, string tableName, string columnCNName, string nameSpace, string foldername, Guid table_Id, bool isTreeLoad);
         Task<WebResponseContent> SyncTable(string tableName);
-        Task<WebResponseContent> DelTree(int table_Id);
+        Task<WebResponseContent> DelTree(Guid tableId);
     }
 }

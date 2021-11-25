@@ -9,7 +9,7 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.IServices
 {
-    public partial interface ISys_RoleService : IService<Sys_Role>
+    public partial interface ISysRoleService : IService<SysRole>
     {
     }
  }

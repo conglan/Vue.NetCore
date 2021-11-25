@@ -11,12 +11,12 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.Services
 {
-    public partial class Sys_MenuService
+    public partial class SysMenuService
     {
         /// <summary>
         /// 菜单静态化处理，每次获取菜单时先比较菜单是否发生变化，如果发生变化从数据库重新获取，否则直接获取_menus菜单
         /// </summary>
-        private static List<Sys_Menu> _menus { get; set; }
+        private static List<SysMenu> _menus { get; set; }
 
         /// <summary>
         /// 从数据库获取菜单时锁定的对象
@@ -40,27 +40,26 @@ namespace VOL.System.Services
             return (await repository.FindAsync(x => 1 == 1, a =>
              new
              {
-                 id = a.Menu_Id,
+                 id = a.Id,
                  parentId = a.ParentId,
                  name = a.MenuName,
                  a.OrderNo
              })).OrderByDescending(a => a.OrderNo)
                 .ThenByDescending(q => q.parentId).ToList();
-
         }
 
-        private List<Sys_Menu> GetAllMenu()
+        private List<SysMenu> GetAllMenu()
         {
             //每次比较缓存是否更新过，如果更新则重新获取数据
             if (_menuVersionn != "" && _menuVersionn == CacheContext.Get(_menuCacheKey))
             {
-                return _menus ?? new List<Sys_Menu>();
+                return _menus ?? new List<SysMenu>();
             }
             lock (_menuObj)
             {
                 if (_menuVersionn != "" && _menus != null) return _menus;
                 //2020.12.27增加菜单界面上不显示，但可以分配权限
-                _menus = repository.FindAsIQueryable(x => x.Enable == 1 || x.Enable == 2)
+                _menus = repository.FindAsIQueryable(x => x.Enable == EnableEnum.启用)
                     .OrderByDescending(a => a.OrderNo)
                     .ThenByDescending(q => q.ParentId).ToList();
 
@@ -70,11 +69,11 @@ namespace VOL.System.Services
                     {
                         try
                         {
-                            x.Actions = x.Auth.DeserializeObject<List<Sys_Actions>>();
+                            x.Actions = x.Auth.DeserializeObject<List<SysActions>>();
                         }
                         catch { }
                     }
-                    if (x.Actions == null) x.Actions = new List<Sys_Actions>();
+                    if (x.Actions == null) x.Actions = new List<SysActions>();
                 });
 
                 string cacheVersion = CacheContext.Get(_menuCacheKey);
@@ -95,21 +94,20 @@ namespace VOL.System.Services
         /// 获取当前用户有权限查看的菜单
         /// </summary>
         /// <returns></returns>
-        public List<Sys_Menu> GetCurrentMenuList()
+        public List<SysMenu> GetCurrentMenuList()
         {
-            int roleId = UserContext.Current.RoleId;
+            Guid roleId = UserContext.Current.RoleId;
             return GetUserMenuList(roleId);
         }
 
-
-        public List<Sys_Menu> GetUserMenuList(int roleId)
+        public List<SysMenu> GetUserMenuList(Guid roleId)
         {
             if (UserContext.IsRoleIdSuperAdmin(roleId))
             {
                 return GetAllMenu();
             }
-            List<int> menuIds = UserContext.Current.GetPermissions(roleId).Select(x => x.Menu_Id).ToList();
-            return GetAllMenu().Where(x => menuIds.Contains(x.Menu_Id)).ToList();
+            List<Guid> menuIds = UserContext.Current.GetPermissionList(roleId).Select(x => x.MenuId).ToList();
+            return GetAllMenu().Where(x => menuIds.Contains(x.Id)).ToList();
         }
 
         /// <summary>
@@ -126,7 +124,7 @@ namespace VOL.System.Services
         /// </summary>
         /// <param name="roleId"></param>
         /// <returns></returns>
-        public async Task<object> GetMenuActionList(int roleId)
+        public async Task<object> GetMenuActionList(Guid roleId)
         {
             //2020.12.27增加菜单界面上不显示，但可以分配权限
             if (UserContext.IsRoleIdSuperAdmin(roleId))
@@ -134,7 +132,7 @@ namespace VOL.System.Services
                 return await Task.Run(() => GetAllMenu().Select(x =>
                 new
                 {
-                    id = x.Menu_Id,
+                    id = x.Id,
                     name = x.MenuName,
                     url = x.Url,
                     parentId = x.ParentId,
@@ -146,11 +144,11 @@ namespace VOL.System.Services
 
             var menu = from a in UserContext.Current.Permissions
                        join b in GetAllMenu()
-                       on a.Menu_Id equals b.Menu_Id
+                       on a.MenuId equals b.Id
                        orderby b.OrderNo descending
                        select new
                        {
-                           id = a.Menu_Id,
+                           id = a.MenuId,
                            name = b.MenuName,
                            url = b.Url,
                            parentId = b.ParentId,
@@ -166,40 +164,40 @@ namespace VOL.System.Services
         /// </summary>
         /// <param name="menu"></param>
         /// <returns></returns>
-        public async Task<WebResponseContent> Save(Sys_Menu menu)
+        public async Task<WebResponseContent> Save(SysMenu menu)
         {
             WebResponseContent webResponse = new WebResponseContent();
             if (menu == null) return webResponse.Error("没有获取到提交的参数");
-            if (menu.Menu_Id > 0 && menu.Menu_Id == menu.ParentId) return webResponse.Error("父级ID不能是当前菜单的ID");
+            if (menu.Id != Guid.Empty && menu.Id == menu.ParentId) return webResponse.Error("父级ID不能是当前菜单的ID");
             try
             {
                 webResponse = menu.ValidationEntity(x => new { x.MenuName, x.TableName });
                 if (!webResponse.Status) return webResponse;
                 if (menu.TableName != "/" && menu.TableName != ".")
                 {
-                    Sys_Menu sysMenu = await repository.FindAsyncFirst(x => x.TableName == menu.TableName);
+                    SysMenu sysMenu = await repository.FindAsyncFirst(x => x.TableName == menu.TableName);
                     if (sysMenu != null)
                     {
-                        if ((menu.Menu_Id > 0 && sysMenu.Menu_Id != menu.Menu_Id)
-                            || menu.Menu_Id <= 0)
+                        if ((menu.Id != Guid.Empty && sysMenu.Id != menu.Id)
+                            || menu.Id == Guid.Empty)
                         {
                             return webResponse.Error($"视图/表名【{menu.TableName}】已被其他菜单使用");
                         }
                     }
                 }
 
-                if (menu.Menu_Id <= 0)
+                if (menu.Id == Guid.Empty)
                 {
                     repository.Add(menu.SetCreateDefaultVal());
                 }
                 else
                 {
                     //2020.05.07新增禁止选择上级角色为自己
-                    if (menu.Menu_Id == menu.ParentId)
+                    if (menu.Id == menu.ParentId)
                     {
                         return WebResponseContent.Instance.Error($"父级id不能为自己");
                     }
-                    if (repository.Exists(x => x.ParentId == menu.Menu_Id && menu.ParentId == x.Menu_Id))
+                    if (repository.Exists(x => x.ParentId == menu.Id && menu.ParentId == x.Id))
                     {
                         return WebResponseContent.Instance.Error($"不能选择此父级id，选择的父级id与当前菜单形成依赖关系");
                     }
@@ -214,7 +212,7 @@ namespace VOL.System.Services
                         p.Enable,
                         p.TableName,
                         p.ModifyDate,
-                        p.Modifier
+                        p.ModifyId
                     });
                 }
                 await repository.SaveChangesAsync();
@@ -231,7 +229,6 @@ namespace VOL.System.Services
                 Logger.Info($"表:{menu.TableName},菜单：{menu.MenuName},权限{menu.Auth},{(webResponse.Status ? "成功" : "失败")}{webResponse.Message}");
             }
             return webResponse;
-
         }
 
         /// <summary>
@@ -239,13 +236,13 @@ namespace VOL.System.Services
         /// </summary>
         /// <param name="menuId"></param>
         /// <returns></returns>
-        public async Task<object> GetTreeItem(int menuId)
+        public async Task<object> GetTreeItem(Guid menuId)
         {
-            var sysMenu = (await base.repository.FindAsync(x => x.Menu_Id == menuId))
+            var sysMenu = (await base.repository.FindAsync(x => x.Id == menuId))
                 .Select(
                 p => new
                 {
-                    p.Menu_Id,
+                    p.Id,
                     p.ParentId,
                     p.MenuName,
                     p.Url,
@@ -254,7 +251,7 @@ namespace VOL.System.Services
                     p.Icon,
                     p.Enable,
                     p.CreateDate,
-                    p.Creator,
+                    p.CreateId,
                     p.TableName,
                     p.ModifyDate
                 }).FirstOrDefault();
@@ -262,4 +259,3 @@ namespace VOL.System.Services
         }
     }
 }
-

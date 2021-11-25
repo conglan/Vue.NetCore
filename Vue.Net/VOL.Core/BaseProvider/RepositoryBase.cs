@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Data.SqlClient;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -17,21 +16,22 @@ using VOL.Core.Enums;
 using VOL.Core.Extensions;
 using VOL.Core.Utilities;
 using VOL.Entity;
-using VOL.Entity.SystemModels;
 
 namespace VOL.Core.BaseProvider
 {
-    public abstract class RepositoryBase<TEntity> where TEntity : BaseEntity
+    public abstract class RepositoryBase<TEntity> where TEntity : KeyEntity
     {
         public RepositoryBase()
         {
         }
+
         public RepositoryBase(VOLContext dbContext)
         {
             this.DefaultDbContext = dbContext ?? throw new Exception("dbContext未实例化。");
         }
 
         private VOLContext DefaultDbContext { get; set; }
+
         private VOLContext EFContext
         {
             get
@@ -45,14 +45,17 @@ namespace VOL.Core.BaseProvider
         {
             get { return DefaultDbContext; }
         }
+
         private DbSet<TEntity> DBSet
         {
             get { return EFContext.Set<TEntity>(); }
         }
+
         public ISqlDapper DapperContext
         {
             get { return DBServerProvider.GetSqlDapper<TEntity>(); }
         }
+
         /// <summary>
         /// 执行事务
         /// </summary>
@@ -104,6 +107,7 @@ namespace VOL.Core.BaseProvider
         {
             return DBSet.AnyAsync(predicate);
         }
+
         public virtual List<TFind> Find<TFind>(Expression<Func<TFind, bool>> predicate) where TFind : class
         {
             return EFContext.Set<TFind>().Where(predicate).ToList();
@@ -155,6 +159,7 @@ namespace VOL.Core.BaseProvider
         {
             return FindAsIQueryable(sources, predicate).ToList();
         }
+
         public virtual List<TResult> Find<Source, TResult>(IEnumerable<Source> sources,
               Func<Source, Expression<Func<TEntity, bool>>> predicate,
               Expression<Func<TEntity, TResult>> selector)
@@ -188,6 +193,7 @@ namespace VOL.Core.BaseProvider
         {
             return DBSet.Where(predicate).Select(selector).ToList();
         }
+
         /// <summary>
         /// 单表查询
         /// </summary>
@@ -197,8 +203,9 @@ namespace VOL.Core.BaseProvider
         {
             return FindAsIQueryable(predicate).ToList();
         }
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="predicate"></param>
         /// <param name=""></param>
@@ -208,7 +215,6 @@ namespace VOL.Core.BaseProvider
         {
             return FindAsIQueryable(predicate, orderBy).FirstOrDefault();
         }
-
 
         public IQueryable<TEntity> FindAsIQueryable(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, Dictionary<object, QueryOrderBy>>> orderBy = null)
         {
@@ -224,9 +230,9 @@ namespace VOL.Core.BaseProvider
 
         /// <summary>
         /// 通过条件查询返回指定列的数据(将TEntity映射到匿名或实体T)
-        ///var result = Sys_UserRepository.GetInstance.Find(x => x.UserName == loginInfo.userName, p => new { uname = p.UserName });
+        ///var result = SysUserRepository.GetInstance.Find(x => x.UserName == loginInfo.userName, p => new { uname = p.UserName });
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
         /// <param name="pageIndex"></param>
@@ -285,7 +291,6 @@ namespace VOL.Core.BaseProvider
             return IQueryablePage<TEntity>(pageIndex, pagesize, out int rowcount, predicate, orderBy).Select(selectorResult).ToList();
         }
 
-
         /// <summary>
         /// 更新表数据
         /// </summary>
@@ -305,19 +310,21 @@ namespace VOL.Core.BaseProvider
             }, properties, saveChanges);
         }
 
-
         public virtual int Update<TSource>(TSource entity, string[] properties, bool saveChanges = false) where TSource : class
         {
             return UpdateRange<TSource>(new List<TSource>() { entity }, properties, saveChanges);
         }
+
         public virtual int Update<TSource>(TSource entity, bool saveChanges = false) where TSource : class
         {
             return UpdateRange<TSource>(new List<TSource>() { entity }, new string[0], saveChanges);
         }
+
         public virtual int UpdateRange<TSource>(IEnumerable<TSource> entities, Expression<Func<TSource, object>> properties, bool saveChanges = false) where TSource : class
         {
             return UpdateRange<TSource>(entities, properties?.GetExpressionProperty(), saveChanges);
         }
+
         public virtual int UpdateRange<TSource>(IEnumerable<TSource> entities, bool saveChanges = false) where TSource : class
         {
             return UpdateRange<TSource>(entities, new string[0], saveChanges);
@@ -389,9 +396,6 @@ namespace VOL.Core.BaseProvider
             }
         }
 
-
-
-
         /// <summary>
         ///
         /// </summary>
@@ -429,6 +433,7 @@ namespace VOL.Core.BaseProvider
             DbContext.SaveChanges();
             return webResponse.OK("修改成功,明细" + message, entity);
         }
+
         private string UpdateDetail<TDetail>(List<TDetail> list,
             string keyName,
             object keyValue,
@@ -505,6 +510,7 @@ namespace VOL.Core.BaseProvider
                 DbContext.SaveChanges();
             }
         }
+
         /// <summary>
         /// 通过主键批量删除
         /// </summary>
@@ -530,7 +536,6 @@ namespace VOL.Core.BaseProvider
             return ExecuteSqlCommand(sql);
         }
 
-
         public virtual Task AddAsync(TEntity entities)
         {
             return DBSet.AddRangeAsync(entities);
@@ -545,6 +550,7 @@ namespace VOL.Core.BaseProvider
         {
             AddRange(new List<TEntity>() { entities }, saveChanges);
         }
+
         public virtual void AddRange(IEnumerable<TEntity> entities, bool saveChanges = false)
         {
             DBSet.AddRange(entities);
@@ -618,6 +624,7 @@ namespace VOL.Core.BaseProvider
         {
             DbContext.Entry(entity).State = EntityState.Detached;
         }
+
         public virtual void DetachedRange(IEnumerable<TEntity> entities)
         {
             foreach (var entity in entities)

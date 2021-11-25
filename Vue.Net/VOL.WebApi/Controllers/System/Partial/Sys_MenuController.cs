@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
 using VOL.Core.Enums;
 using VOL.Core.Filters;
@@ -7,7 +8,7 @@ using VOL.System.IServices;
 
 namespace VOL.System.Controllers
 {
-    public partial class Sys_MenuController
+    public partial class SysMenuController
     {
         /// <summary>
         /// 
@@ -15,29 +16,27 @@ namespace VOL.System.Controllers
         /// <returns></returns>
         [HttpGet, HttpPost, Route("getTreeMenu")]
         //2019.10.24屏蔽用户查询自己权限菜单
-        // [ApiActionPermission("Sys_Menu", ActionPermissionOptions.Search)]
         public async Task<IActionResult> GetTreeMenu()
         {
             return Json(await _service.GetCurrentMenuActionList());
         }
         [HttpPost, Route("getMenu")]
-        [ApiActionPermission("Sys_Menu", ActionPermissionOptions.Search)]
+        [ApiActionPermission("SysMenu", ActionPermissionOptions.Search)]
         public async Task<IActionResult> GetMenu()
         {
             return Json(await _service.GetMenu());
         }
 
         [HttpPost, Route("getTreeItem")]
-        [ApiActionPermission("Sys_Menu", "1", ActionPermissionOptions.Search)]
-        public async Task<IActionResult> GetTreeItem(int menuId)
+        [ApiActionPermission("SysMenu", ActionPermissionOptions.Search)]
+        public async Task<IActionResult> GetTreeItem(Guid menuId)
         {
             return Json(await _service.GetTreeItem(menuId));
         }
 
-        //[ActionPermission("Sys_Menu", "1", ActionPermissionOptions.Add)]
         //只有角色ID为1的才能进行保存操作
         [HttpPost, Route("save"), ApiActionPermission(ActionRolePermission.SuperAdmin)]
-        public async Task<ActionResult> Save([FromBody] Sys_Menu menu)
+        public async Task<ActionResult> Save([FromBody] SysMenu menu)
         {
             return Json(await _service.Save(menu));
         }
@@ -49,17 +48,17 @@ namespace VOL.System.Controllers
         /// <returns></returns>
         [ApiActionPermission(ActionRolePermission.SuperAdmin)]
         [HttpPost, Route("delMenu")]
-        public  async   Task<ActionResult> DelMenu(int menuId)
+        public  async   Task<ActionResult> DelMenu(Guid menuId)
         {
             Core.Utilities.WebResponseContent webResponse = new Core.Utilities.WebResponseContent();
-            var repository = Repositories.Sys_MenuRepository.Instance;
+            var repository = Repositories.SysMenuRepository.Instance;
             if (await repository.ExistsAsync(x => x.ParentId == menuId))
             {  
                 return Json(webResponse.Error("当前菜单存在子菜单,请先删除子菜单!"));
             }
-            repository.Delete(new Sys_Menu()
+            repository.Delete(new SysMenu()
             {
-                Menu_Id = menuId
+                Id = menuId
             },true);
             return Json(webResponse.OK("删除成功"));
         }

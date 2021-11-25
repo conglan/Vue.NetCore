@@ -10,6 +10,10 @@ namespace VOL.Core.Utilities
     public static class VierificationCode
     {
         private static readonly string[] _chars = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "P", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
+        /// <summary>
+        /// 随机字母加数字验证码
+        /// </summary>
+        /// <returns></returns>
         public static string RandomText()
         {
             string code = "";//产生的随机数
@@ -31,6 +35,18 @@ namespace VOL.Core.Utilities
             }
             return code;
         }
+
+        public static string RandomNums(int length = 4)
+        {
+            Random rand = new Random();
+            int[] ints = new int[length];
+            for (int i = 0; i < length; i++)
+            {
+                ints[i] = rand.Next(1, 9);
+            }
+            return string.Join("", ints);
+        }
+
         public static string CreateBase64Imgage(string code)
         {
             Random random = new Random();

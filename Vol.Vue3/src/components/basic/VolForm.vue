@@ -528,7 +528,7 @@ export default defineComponent({
 
       if (keys.length == 0) return;
       appContext.config.globalProperties.http
-        .post("/api/Sys_Dictionary/GetVueDictionary", keys)
+        .post("/api/SysDictionary/GetVueDictionary", keys)
         .then((dic) => {
           bindOptions(dic, binds);
         });
@@ -817,7 +817,7 @@ export default defineComponent({
         url = item.url(val, item.dataKey, item);
       } else {
         url =
-          (item.url || "/api/Sys_Dictionary/GetSearchDictionary") +
+          (item.url || "/api/SysDictionary/GetSearchDictionary") +
           "?dicNo=" +
           item.dataKey +
           "&value=" +

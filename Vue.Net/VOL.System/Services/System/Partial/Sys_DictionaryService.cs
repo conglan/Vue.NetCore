@@ -1,10 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VOL.Core.BaseProvider;
-using VOL.Core.Const;
-using VOL.Core.Enums;
 using VOL.Core.Extensions;
 using VOL.Core.Infrastructure;
 using VOL.Core.Utilities;
@@ -12,9 +11,9 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.Services
 {
-    public partial class Sys_DictionaryService
+    public partial class SysDictionaryService
     {
-        protected override void Init(IRepository<Sys_Dictionary> repository)
+        protected override void Init(IRepository<SysDictionary> repository)
         {
         }
 
@@ -27,7 +26,7 @@ namespace VOL.System.Services
             return await repository.FindAsync(x => 1 == 1, s => s.DicNo);
         }
 
-        public List<Sys_Dictionary> Dictionaries
+        public List<SysDictionary> Dictionaries
         {
             get { return DictionaryManager.Dictionaries; }
         }
@@ -40,7 +39,7 @@ namespace VOL.System.Services
                 dicNo = s.DicNo,
                 config = s.Config,
                 dbSql = s.DbSql,
-                list = s.Sys_DictionaryList.OrderByDescending(o => o.OrderNo)
+                list = s.SysDictionaryList.OrderByDescending(o => o.OrderNo)
                           .Select(list => new { key = list.DicValue, value = list.DicName })
             }).ToList();
 
@@ -134,10 +133,10 @@ namespace VOL.System.Services
             return list;
         }
 
-        public override PageGridData<Sys_Dictionary> GetPageData(PageDataOptions pageData)
+        public override PageGridData<SysDictionary> GetPageData(PageDataOptions pageData)
         {
             //增加查询条件
-            base.QueryRelativeExpression = (IQueryable<Sys_Dictionary> fun) =>
+            base.QueryRelativeExpression = (IQueryable<SysDictionary> fun) =>
             {
                 return fun.Where(x => 1 == 1);
             };
@@ -147,18 +146,23 @@ namespace VOL.System.Services
         public override WebResponseContent Update(SaveModel saveDataModel)
         {
             if (saveDataModel.MainData.DicKeyIsNullOrEmpty("DicNo")
-                || saveDataModel.MainData.DicKeyIsNullOrEmpty("Dic_ID"))
+                || saveDataModel.MainData.DicKeyIsNullOrEmpty("DicId"))
                 return base.Add(saveDataModel);
             //判断修改的字典编号是否在其他ID存在
             string dicNo = saveDataModel.MainData["DicNo"].ToString().Trim();
-            if (base.repository.Exists(x => x.DicNo == dicNo && x.Dic_ID != saveDataModel.MainData["Dic_ID"].GetInt()))
+
+            var strDicId = saveDataModel.MainData["DicId"].ToString();
+
+            var dicId = string.IsNullOrEmpty(strDicId) ? Guid.Empty : Guid.Parse(strDicId);
+
+            if (base.repository.Exists(x => x.DicNo == dicNo && x.Id != dicId))
                 return new WebResponseContent().Error($"字典编号:{ dicNo}已存在。!");
 
-            base.UpdateOnExecuting = (Sys_Dictionary dictionary, object addList, object editList, List<object> obj) =>
+            base.UpdateOnExecuting = (SysDictionary dictionary, object addList, object editList, List<object> obj) =>
             {
-                List<Sys_DictionaryList> listObj = new List<Sys_DictionaryList>();
-                listObj.AddRange(addList as List<Sys_DictionaryList>);
-                listObj.AddRange(editList as List<Sys_DictionaryList>);
+                List<SysDictionaryList> listObj = new List<SysDictionaryList>();
+                listObj.AddRange(addList as List<SysDictionaryList>);
+                listObj.AddRange(editList as List<SysDictionaryList>);
 
                 WebResponseContent _responseData = CheckKeyValue(listObj);
                 if (!_responseData.Status) return _responseData;
@@ -169,7 +173,7 @@ namespace VOL.System.Services
             return RemoveCache(base.Update(saveDataModel));
         }
 
-        private WebResponseContent CheckKeyValue(List<Sys_DictionaryList> dictionaryLists)
+        private WebResponseContent CheckKeyValue(List<SysDictionaryList> dictionaryLists)
         {
             WebResponseContent webResponse = new WebResponseContent();
             if (dictionaryLists == null || dictionaryLists.Count == 0) return webResponse.OK();
@@ -220,9 +224,9 @@ namespace VOL.System.Services
             if (base.repository.Exists(x => x.DicNo == dicNo))
                 return new WebResponseContent().Error("字典编号:" + dicNo + "已存在");
 
-            base.AddOnExecuting = (Sys_Dictionary dic, object obj) =>
+            base.AddOnExecuting = (SysDictionary dic, object obj) =>
             {
-                WebResponseContent _responseData = CheckKeyValue(obj as List<Sys_DictionaryList>);
+                WebResponseContent _responseData = CheckKeyValue(obj as List<SysDictionaryList>);
                 if (!_responseData.Status) return _responseData;
 
                 dic.DbSql = SqlFilters(dic.DbSql);

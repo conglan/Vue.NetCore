@@ -12,16 +12,16 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.System.Services
 {
-    public partial class Sys_UserService : ServiceBase<Sys_User, ISys_UserRepository>, ISys_UserService, IDependency
+    public partial class SysUserService : ServiceBase<SysUser, ISysUserRepository>, ISysUserService, IDependency
     {
-        public Sys_UserService(ISys_UserRepository repository)
+        public SysUserService(ISysUserRepository repository)
              : base(repository) 
         { 
            Init(repository);
         }
-        public static ISys_UserService Instance
+        public static ISysUserService Instance
         {
-           get { return AutofacContainerModule.GetService<ISys_UserService>(); }
+           get { return AutofacContainerModule.GetService<ISysUserService>(); }
         }
     }
 }
