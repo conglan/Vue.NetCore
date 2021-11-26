@@ -44,10 +44,6 @@ let form = [
     name: 'validator',
     component: () => import('@/views/forms/objectValidator.vue')
   }, {
-    path: '/volUploadExample',
-    name: 'volUploadExample',
-    component: () => import('@/views/upload/volUploadExample.vue')
-  }, {
     path: '/formUpload',
     name: 'formUpload',
     component: () => import('@/views/upload/formUpload.vue')
